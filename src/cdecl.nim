@@ -20,11 +20,12 @@ template cname*(name: untyped): CToken =
 
 macro cdeclmacro*(name: string, def: untyped) =
   ## Macro helper for wrapping a C macro that declares 
-  ## a new C variable. It handles emitting the appropriate
+  ## a new C variable.
+  ## 
+  ## It handles emitting the appropriate
   ## C code for calling the macro. Additionally it defines
   ## a new Nim variable using importc which imports the 
   ## declared variable.   
-  
   runnableExamples:
     {.emit: """/*TYPESECTION*/
     /* define example C Macro for testing */

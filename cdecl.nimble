@@ -11,6 +11,9 @@ srcDir        = "src"
 
 requires "nim >= 1.6.6"
 requires "macroutils >= 1.2.0"
+requires "mddoc >= 0.0.4"
 
 task docs, "generate docs":
   exec("nimble doc src/cdecl.nim ")
+task readme, "generate readme":
+  exec("mddoc src/cdecl.nim ")
