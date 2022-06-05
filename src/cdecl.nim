@@ -30,11 +30,14 @@ macro cdeclmacro*(name: string, def: untyped) =
       ctoks.add macroutils.name(arg)
       arg.typ= ident "untyped"
 
+  assert ctoks.len() == 1 # TODO: support multple vars decl?
+
+  let n1 = ctoks[0]
   result = quote do:
     template `procName`() =
-      var `varName` {.inject, importc, nodecl.}: c_var_t[size]
+      var `n1` {.inject, importc, nodecl.}: c_var_t[size]
       {.emit: "/*TYPESECTION*/\n$1($2, $3); " %
-        [ symbolName(`varName`), size ] .}
+        [ symbolName(`n1`), $size ] .}
   
   result.params= FormalParams(retType, args)
   echo fmt"cmacro: {result.repr=}"

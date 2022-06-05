@@ -17,20 +17,16 @@ type
 #define C_DEFINE_VAR(NM, SZ) int NM[SZ]
 """.}
 
-template CDefineVarManual*(name: untyped, size: static[int]) =
-  var name* {.inject, importc, nodecl.}: array[size, int]
-  {.emit: "/*TYPESECTION*/\nC_DEFINE_VAR($1, $2); " % [ symbolName(name), $size, ] .}
-
-proc CDefineVar*[name](size: static[int]): c_var_t {.
+proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
   cdeclmacro: "C_DEFINE_VAR".}
 
 const cVarSz = 4
 CDefineVar(myVar, cVarSz)
  
-# test "test myVar declaration":
-#   let testVal = [1,2,3,4]
-#   myVar[0..3] = testVal
-#   check myVar.len() == cVarSz
-#   echo "myVar: ", repr myVar
-#   let res = myVar == testVal
-#   check res
+test "test myVar declaration":
+  let testVal = [1,2,3,4]
+  myVar[0..3] = testVal
+  check myVar.len() == cVarSz
+  echo "myVar: ", repr myVar
+  let res = myVar == testVal
+  check res
