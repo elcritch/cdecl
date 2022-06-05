@@ -17,6 +17,7 @@ template cname*(name: untyped): CToken =
   symbolName(name)
 
 macro cdeclmacro*(name: string, def: untyped) =
+  let varNameStr = name.strVal 
   let varName = ident(name.strVal) 
   let procName = macroutils.name(def)
   var params = macroutils.params(def)
@@ -35,11 +36,11 @@ macro cdeclmacro*(name: string, def: untyped) =
   let n1 = ctoks[0]
   result = quote do:
     template `procName`() =
-      var `n1` {.inject, importc, nodecl.}: 
+      var `n1` {.inject, importc, nodecl.}: `retType`
       {.emit: "/*TYPESECTION*/\n$1($2, $3); " %
-        [ `varName`, symbolName(`n1`), $size ] .}
+        [ `varNameStr`, symbolName(`n1`), $size ] .}
   
-  result.params= FormalParams(retType, args)
+  result.params= FormalParams(Empty(), args)
   echo fmt"cmacro: {result.repr=}"
 
 
