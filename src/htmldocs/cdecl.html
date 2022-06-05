@@ -178,6 +178,11 @@ window.addEventListener('DOMContentLoaded', main);
 <span class="Keyword">proc</span> <span class="Identifier">CDefineVar</span><span class="Operator">*</span><span class="Punctuation">(</span><span class="Identifier">name</span><span class="Punctuation">:</span> <span class="Identifier">CToken</span><span class="Punctuation">,</span> <span class="Identifier">size</span><span class="Punctuation">:</span> <span class="Keyword">static</span><span class="Punctuation">[</span><span class="Identifier">int</span><span class="Punctuation">]</span><span class="Punctuation">)</span><span class="Punctuation">:</span> <span class="Identifier">array</span><span class="Punctuation">[</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Identifier">int</span><span class="Punctuation">]</span> <span class="Punctuation">{</span><span class="Operator">.</span>
   <span class="Identifier">cdeclmacro</span><span class="Punctuation">:</span> <span class="StringLit">&quot;C_DEFINE_VAR&quot;</span><span class="Operator">.</span><span class="Punctuation">}</span>
 
+<span class="Comment"># Then it's possible to invoke CDefineVar to call the C macro and</span>
+<span class="Comment"># generate a variable:</span>
+<span class="Keyword">const</span> <span class="Identifier">cVarSz</span> <span class="Operator">=</span> <span class="DecNumber">4</span>
+<span class="Identifier">CDefineVar</span><span class="Punctuation">(</span><span class="Identifier">myVar</span><span class="Punctuation">,</span> <span class="Identifier">cVarSz</span><span class="Punctuation">)</span>
+
 <span class="Keyword">static</span><span class="Punctuation">:</span>
   <span class="Keyword">discard</span> <span class="LongStringLit">&quot;&quot;&quot;`CDefineVar` generates code that looks like:&quot;&quot;&quot;</span>
   <span class="Keyword">discard</span> <span class="Identifier">quote</span> <span class="Keyword">do</span><span class="Punctuation">:</span>
@@ -218,7 +223,7 @@ window.addEventListener('DOMContentLoaded', main);
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-05 22:48:17 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-05 22:50:56 UTC</small>
       </div>
     </div>
   </div>

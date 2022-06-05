@@ -31,6 +31,11 @@ import cdecl
 proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
   cdeclmacro: "C_DEFINE_VAR".}
 
+# Then it's possible to invoke CDefineVar to call the C macro and
+# generate a variable:
+const cVarSz = 4
+CDefineVar(myVar, cVarSz)
+
 static:
   discard """`CDefineVar` generates code that looks like:"""
   discard quote do:
