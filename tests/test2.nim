@@ -15,6 +15,7 @@ type
 {.emit: """/*TYPESECTION*/
 /* define example C Macro for testing */
 #define C_DEFINE_VAR(NM, SZ) int NM[SZ]
+#define C_DEFINE_VAR_DUO(NM, SZ, NM2) int NM[SZ]
 """.}
 
 proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
@@ -37,3 +38,16 @@ test "test myVar declaration":
   check res
 
   check canCompilewrongCallSyntax == false
+
+proc CDefineVarDuo*(name: CToken, size: static[int], otherCVar: CToken): array[size, int] {.
+  cdeclmacro: "C_DEFINE_VAR".}
+
+CDefineVar(myVarDuo, 5)
+ 
+test "test duo myVar declaration":
+  let testVal = [1,2,3,4,5]
+  myVarDuo[0..4] = testVal
+  check myVarDuo.len() == 5
+  echo "myVar: ", repr myVarDuo
+  let res = myVarDuo == testVal
+  check res

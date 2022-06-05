@@ -7,6 +7,8 @@ import macroutils
 import strformat, strutils, sequtils
 export macros
 
+template mname(node: NimNode) = macroutils.name(node)
+
 macro symbolName*(x: typed): string =
   x.toStrLit
 
@@ -29,25 +31,27 @@ macro cdeclmacro*(name: string, def: untyped) =
   var cFmtArgs = Bracket(varNameStr)
   for arg in args.mitems:
     if arg.kind == nnkIdentDefs and arg.typ.repr == "CToken":
-      ctoks.add macroutils.name(arg)
+      ctoks.add arg.mname()
       arg.typ= ident "untyped"
-      cFmtArgs.add Call("symbolName", macroutils.name(arg))
-    else:
-      echo fmt"{arg.treeRepr=}"
-      if arg.kind != nnkIdentDefs:
-        error("arguments to `CDefineVar` must be wrapped in static[T]. Instead got: $1." % [repr(arg)]  )
+      cFmtArgs.add Call("symbolName", arg.mname)
+    elif arg.kind == nnkIdentDefs:
       if arg[1].kind != nnkBracketExpr:
         error("arguments to `CDefineVar` must be wrapped in static[T]. Perhaps try `static[$1]`" % [ arg[0].repr ] )
       if arg[1][0].strVal != "static":
         error("arguments to `CDefineVar` must be wrapped in static[T]. Got: " & arg.repr )
-      cFmtArgs.add Call("$", macroutils.name(arg))
-  assert ctoks.len() == 1 # TODO: support multple vars decl?
+      cFmtArgs.add Call("$", arg.mname)
+    else:
+      error("arguments to `CDefineVar` must a type wrapped in `static[T] or be a `CToken`. Instead got: $1." % [repr(arg)]  )
+  if ctoks.len() == 0:
+    error("arguments to `CDefineVar` must have at least one `CToken` to be use for the variable declaration. ")
+  elif ctoks.len() > 1:
+    warning("mutiple `CToken` arguments passed to `CDefineVar`, only the first one `$1` will be created as a Nim variable. " % [$ctoks[0].mname])
 
-  var cFmtStr = "/*VARSECTION*/\n $1("
+  var cFmtStr = "/*VARSECTION*/\n$1("
   cFmtStr &= toSeq(0..<args.len()).mapIt("$" & $(it+2)).join(", ")
-  cFmtStr &= "); "
+  cFmtStr &= "); /* CDefineVar macro invocation */"
   let cFmtLit = newLit(cFmtStr)
-  let n1 = macroutils.name(args[0])
+  let n1 = args[0].mname
 
   result = quote do:
     template `procName`() =
