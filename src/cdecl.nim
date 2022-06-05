@@ -4,7 +4,7 @@
 
 import macros
 import macroutils
-import strformat
+import strformat, strutils, sequtils
 export macros
 
 macro symbolName*(x: typed): string =
@@ -26,19 +26,27 @@ macro cdeclmacro*(name: string, def: untyped) =
   var args = params[1..^1]
 
   var ctoks: seq[NimNode]
+  var cFmtArgs = Bracket(varNameStr)
   for arg in args.mitems:
     if arg.kind == nnkIdentDefs and arg.typ.repr == "CToken":
       ctoks.add macroutils.name(arg)
       arg.typ= ident "untyped"
+      cFmtArgs.add Call("symbolName", macroutils.name(arg))
+    else:
+      cFmtArgs.add Call("$", macroutils.name(arg))
 
   assert ctoks.len() == 1 # TODO: support multple vars decl?
 
-  let n1 = ctoks[0]
+  var cFmtStr = "/*VARSECTION*/\n $1("
+  cFmtStr &= toSeq(0..<args.len()).mapIt("$" & $(it+2)).join(", ")
+  cFmtStr &= "); "
+  let cFmtLit = newLit(cFmtStr)
+  let n1 = macroutils.name(args[0])
+
   result = quote do:
     template `procName`() =
       var `n1` {.inject, importc, nodecl.}: `retType`
-      {.emit: "/*TYPESECTION*/\n$1($2, $3); " %
-        [ `varNameStr`, symbolName(`n1`), $size ] .}
+      {.emit: `cFmtLit` % `cFmtArgs` .}
   
   result.params= FormalParams(Empty(), args)
   echo fmt"cmacro: {result.repr=}"

@@ -19,7 +19,7 @@ type
 
 template CDefineVar*(name: untyped, size: static[int]) =
   var name* {.inject, importc, nodecl.}: array[size, int]
-  {.emit: "/*TYPESECTION*/\nC_DEFINE_VAR($1, $2); " % [ symbolName(name), $size, ] .}
+  {.emit: "/*VARSECTION*/\nC_DEFINE_VAR($1, $2); " % [ symbolName(name), $size, ] .}
 
 const cVarSz = 4
 CDefineVar(myVar, cVarSz)
