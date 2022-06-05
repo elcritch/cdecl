@@ -3,6 +3,11 @@
 
 ```nim
 import cdecl
+
+proc CMacroDeclare*(name: CToken, size: static[int], otherName: CToken): array[size, int] {.
+  cdeclmacro: "C_MACRO_VARIABLE_DECLARER".}
+
+CMacroDeclare(myVar, 128, someExternalCVariable) # creates myVar
 ```
 
 ## **macro** cdeclmacro
@@ -16,7 +21,7 @@ macro cdeclmacro(name: string; def: untyped)
 
 ## Example
 
-Example:
+Basic Usage:
 
 ```nim
 import macros
@@ -28,6 +33,7 @@ import cdecl
     #define C_DEFINE_VAR_DUO(NM, SZ, NM2) int NM[SZ]
     """.}
 
+# Wrap a C Macro that stakes an C macro label and a size to create a new array variable
 proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
   cdeclmacro: "C_DEFINE_VAR".}
 
@@ -43,3 +49,7 @@ static:
       var name* {.inject, importc, nodecl.}: array[size, int]
     {.emit: "/*VARSECTION*/\nC_DEFINE_VAR($1, $2); " % [ symbolName(name), $size, ] .}
 ```
+
+## TODO
+
+I plan to add more macros as needed and am welcome to PRs. I'm also interested in issues for use cases that fall withing the general theme of invoking C/C++ macros from Nim.
