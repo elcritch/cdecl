@@ -20,11 +20,10 @@ type
 proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
   cdeclmacro: "C_DEFINE_VAR".}
 
-const wrongCall = 
-    compiles(
+const canCompilewrongCallSyntax = 
+    compiles do:
       proc CDefineVar*(name: CToken, size: int): array[size, int] {.
         cdeclmacro: "C_DEFINE_VAR".}
-    )
 
 const cVarSz = 4
 CDefineVar(myVar, cVarSz)
@@ -36,3 +35,5 @@ test "test myVar declaration":
   echo "myVar: ", repr myVar
   let res = myVar == testVal
   check res
+
+  check canCompilewrongCallSyntax == false
