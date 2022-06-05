@@ -40,7 +40,7 @@ macro cdeclmacro*(name: string, def: untyped) =
       cdeclmacro: "C_DEFINE_VAR".}
     
     static:
-      # `CDefineVar` generates code that looks like:
+      discard """`CDefineVar` generates code that looks like:"""
       discard quote do:
         template CDefineVar*(name: untyped, size: static[int]) =
           var name* {.inject, importc, nodecl.}: array[size, int]
