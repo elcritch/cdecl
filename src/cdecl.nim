@@ -33,8 +33,14 @@ macro cdeclmacro*(name: string, def: untyped) =
       arg.typ= ident "untyped"
       cFmtArgs.add Call("symbolName", macroutils.name(arg))
     else:
+      echo fmt"{arg.treeRepr=}"
+      if arg.kind != nnkIdentDefs:
+        error("arguments to `CDefineVar` must be wrapped in static[T]. Instead got: $1." % [repr(arg)]  )
+      if arg[1].kind != nnkBracketExpr:
+        error("arguments to `CDefineVar` must be wrapped in static[T]. Perhaps try `static[$1]`" % [ arg[0].repr ] )
+      if arg[1][0].strVal != "static":
+        error("arguments to `CDefineVar` must be wrapped in static[T]. Got: " & arg.repr )
       cFmtArgs.add Call("$", macroutils.name(arg))
-
   assert ctoks.len() == 1 # TODO: support multple vars decl?
 
   var cFmtStr = "/*VARSECTION*/\n $1("
