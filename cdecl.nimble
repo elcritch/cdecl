@@ -17,3 +17,7 @@ task docs, "generate docs":
   exec("nimble doc src/cdecl.nim ")
 task readme, "generate readme":
   exec("mddoc src/cdecl.nim ")
+
+task release, "update release":
+  docsTask()
+  readmeTask()
