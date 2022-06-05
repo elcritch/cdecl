@@ -20,11 +20,11 @@ type
 proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
   cdeclmacro: "C_DEFINE_VAR".}
 
-# const wrongCall = static:
-#     compiles(
-#       proc CDefineVar*(name: CToken, size: int): array[size, int] {.
-#         cdeclmacro: "C_DEFINE_VAR".}
-#     )
+const wrongCall = 
+    compiles(
+      proc CDefineVar*(name: CToken, size: int): array[size, int] {.
+        cdeclmacro: "C_DEFINE_VAR".}
+    )
 
 const cVarSz = 4
 CDefineVar(myVar, cVarSz)
