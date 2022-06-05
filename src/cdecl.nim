@@ -59,6 +59,6 @@ macro cdeclmacro*(name: string, def: untyped) =
       {.emit: `cFmtLit` % `cFmtArgs` .}
   
   result.params= FormalParams(Empty(), args)
-  echo fmt"cmacro: {result.repr=}"
+  # echo fmt"cmacro: {result.repr=}"
 
 
