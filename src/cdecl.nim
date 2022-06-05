@@ -19,6 +19,23 @@ template cname*(name: untyped): CToken =
   symbolName(name)
 
 macro cdeclmacro*(name: string, def: untyped) =
+  ## Macro helper for wrapping a C macro that declares 
+  ## a new C variable. It handles emitting the appropriate
+  ## C code for calling the macro. Additionally it defines
+  ## a new Nim variable using importc which imports the 
+  ## declared variable.   
+  
+  runnableExamples:
+    {.emit: """/*TYPESECTION*/
+    /* define example C Macro for testing */
+    #define C_DEFINE_VAR(NM, SZ) int NM[SZ]
+    #define C_DEFINE_VAR_DUO(NM, SZ, NM2) int NM[SZ]
+    """.}
+
+    proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
+      cdeclmacro: "C_DEFINE_VAR".}
+
+
   let varNameStr = name.strVal 
   let varName = ident(name.strVal) 
   let procName = macroutils.name(def)
