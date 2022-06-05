@@ -10,21 +10,25 @@ import strutils, strformat
 import cdecl
 
 type
-  c_var = object
-  c_var_other_t = object
+  c_var_t[N] = array[N, int]
+
+{.emit: """
+/* define example C Macro for testing */
+#define C_DEFINE_VAR(NM, SZ) static int NM[SZ];
+""".}
 
 template CDefineVar*(name: untyped, size: static[int]) =
-  var name* {.inject, importc, nodecl.}: ptr c_var_other_t
+  var name* {.inject, importc, nodecl.}: c_var_t[size]
   {.emit: "/*TYPESECTION*/ C_DEFINE_VAR($1, $2);" % [ symbolName(name), $size, ] .}
 
-const cVarSz = 1024
+const cVarSz = 4
 CDefineVar(myVar, cVarSz)
-var blink {.exportc.}: c_var
  
-import cdecl
 test "can add":
-  check add(5, 5) == 10
 
-  ##   KDefineStack(blinkStack, blinkStackSz.int)
-  ##   var blink {.exportc.}: k_thread
+  let vals = [33, 44, 55, 66]
+  myVar[0..3] = vals 
+  check myVar.len() == cVarSz
+  check myVar == vals 
+
 
