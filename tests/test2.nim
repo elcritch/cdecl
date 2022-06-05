@@ -19,7 +19,7 @@ type
 
 template CDefineVarOld*(name: untyped, size: static[int]) =
   var name* {.inject, importc, nodecl.}: c_var_t[size]
-  {.emit: "/*TYPESECTION*/\nC_DEFINE_VAR($1, $2); " %
+  {.emit: "/*TYPESECTION*/\n C_DEFINE_VAR($1, $2); " %
     [ symbolName(name), $size, ] .}
 
 proc CDefineVar*(name: CToken, size: static[int]): c_var_t {.

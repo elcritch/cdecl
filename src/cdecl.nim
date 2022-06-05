@@ -18,14 +18,26 @@ template cname*(name: untyped): CToken =
 
 macro cdeclmacro*(name: string, def: untyped) =
   let procName = macroutils.name(def)
-  let params = macroutils.params(def)
+  var params = macroutils.params(def)
   let retType = params[0]
-  let args = params[1..^1]
   let prags = macroutils.pragmas(def)
+  var args = params[1..^1]
   echo fmt"cmacro: {procname.treeRepr=}"
   echo fmt"cmacro: {params.treeRepr=}"
   echo fmt"cmacro: {args.repr=}"
   echo fmt"cmacro: {retType.treeRepr=}"
   echo fmt"cmacro: {prags.treeRepr=}"
-  result = newStmtList()
+  result = quote do:
+    template `procName`() =
+      var `procName` {.inject, importc, nodecl.}: c_var_t[size]
+      {.emit: "/*TYPESECTION*/\nC_DEFINE_VAR($1, $2); "   .}
+  
+  for arg in args.mitems:
+    echo fmt"cmacro: {arg.treeRepr=}"
+    if arg.kind == nnkIdentDefs and arg.typ.repr == "CToken":
+      arg.typ= ident "untyped"
+
+  result.params= FormalParams(retType, args)
+  echo fmt"cmacro: {result.repr=}"
+
 
