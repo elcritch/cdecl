@@ -6,7 +6,7 @@
 # To run these tests, simply execute `nimble test`.
 
 import unittest
-import strutils, strformat
+import strutils, strformat, sequtils
 import cdecl
 
 type
@@ -18,9 +18,16 @@ type
 """.}
 
 template CDefineVar*(name: untyped, size: static[int]) =
-  var name* {.inject, importc, nodecl.}: c_var_t[size]
+  var name* {.inject, importc, nodecl.}: array[size, int]
   {.emit: "/*TYPESECTION*/\nC_DEFINE_VAR($1, $2); " % [ symbolName(name), $size, ] .}
 
 const cVarSz = 4
 CDefineVar(myVar, cVarSz)
  
+test "test myVar declaration":
+  let testVal = [1,2,3,4]
+  myVar[0..3] = testVal
+  check myVar.len() == cVarSz
+  echo "myVar: ", repr myVar
+  let res = myVar == testVal
+  check res

@@ -17,21 +17,26 @@ template cname*(name: untyped): CToken =
   symbolName(name)
 
 macro cdeclmacro*(name: string, def: untyped) =
+  let varName = ident(name.strVal) 
   let procName = macroutils.name(def)
   var params = macroutils.params(def)
   let retType = params[0]
   let prags = macroutils.pragmas(def)
   var args = params[1..^1]
-  result = quote do:
-    template `procName`() =
-      var `procName` {.inject, importc, nodecl.}: c_var_t[size]
-      {.emit: "/*TYPESECTION*/\nC_DEFINE_VAR($1, $2); "   .}
-  
+
+  var ctoks: seq[NimNode]
   for arg in args.mitems:
     if arg.kind == nnkIdentDefs and arg.typ.repr == "CToken":
+      ctoks.add macroutils.name(arg)
       arg.typ= ident "untyped"
 
+  result = quote do:
+    template `procName`() =
+      var `varName` {.inject, importc, nodecl.}: c_var_t[size]
+      {.emit: "/*TYPESECTION*/\n$1($2, $3); " %
+        [ symbolName(`varName`), size ] .}
+  
   result.params= FormalParams(retType, args)
-  # echo fmt"cmacro: {result.repr=}"
+  echo fmt"cmacro: {result.repr=}"
 
 
