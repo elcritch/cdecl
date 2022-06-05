@@ -35,9 +35,9 @@ macro cdeclmacro*(name: string, def: untyped) =
   let n1 = ctoks[0]
   result = quote do:
     template `procName`() =
-      var `n1` {.inject, importc, nodecl.}: c_var_t[size]
+      var `n1` {.inject, importc, nodecl.}: 
       {.emit: "/*TYPESECTION*/\n$1($2, $3); " %
-        [ symbolName(`n1`), $size ] .}
+        [ `varName`, symbolName(`n1`), $size ] .}
   
   result.params= FormalParams(retType, args)
   echo fmt"cmacro: {result.repr=}"
