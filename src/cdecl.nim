@@ -55,7 +55,7 @@ macro cdeclmacro*(name: string, def: untyped) =
 
   result = quote do:
     template `procName`() =
-      var `n1` {.inject, importc, nodecl.}: `retType`
+      var `n1` {.inject, importc, nodecl, global.}: `retType`
       {.emit: `cFmtLit` % `cFmtArgs` .}
   
   result.params= FormalParams(Empty(), args)
