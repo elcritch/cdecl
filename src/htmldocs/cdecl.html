@@ -166,14 +166,23 @@ window.addEventListener('DOMContentLoaded', main);
 <p>It handles emitting the appropriate C code for calling the macro. Additionally it defines a new Nim variable using importc which imports the declared variable.   </p>
 
 <p><strong class="examples_text">Example:</strong></p>
-<pre class="listing"><span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">emit</span><span class="Punctuation">:</span> <span class="LongStringLit">&quot;&quot;&quot;/*TYPESECTION*/
+<pre class="listing"><span class="Keyword">import</span> <span class="Identifier">macros</span>
+<span class="Keyword">import</span> <span class="Identifier">cdecl</span> 
+
+<span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">emit</span><span class="Punctuation">:</span> <span class="LongStringLit">&quot;&quot;&quot;/*TYPESECTION*/
     /* define example C Macro for testing */
     #define C_DEFINE_VAR(NM, SZ) int NM[SZ]
     #define C_DEFINE_VAR_DUO(NM, SZ, NM2) int NM[SZ]
     &quot;&quot;&quot;</span><span class="Operator">.</span><span class="Punctuation">}</span>
 
 <span class="Keyword">proc</span> <span class="Identifier">CDefineVar</span><span class="Operator">*</span><span class="Punctuation">(</span><span class="Identifier">name</span><span class="Punctuation">:</span> <span class="Identifier">CToken</span><span class="Punctuation">,</span> <span class="Identifier">size</span><span class="Punctuation">:</span> <span class="Keyword">static</span><span class="Punctuation">[</span><span class="Identifier">int</span><span class="Punctuation">]</span><span class="Punctuation">)</span><span class="Punctuation">:</span> <span class="Identifier">array</span><span class="Punctuation">[</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Identifier">int</span><span class="Punctuation">]</span> <span class="Punctuation">{</span><span class="Operator">.</span>
-  <span class="Identifier">cdeclmacro</span><span class="Punctuation">:</span> <span class="StringLit">&quot;C_DEFINE_VAR&quot;</span><span class="Operator">.</span><span class="Punctuation">}</span></pre>
+  <span class="Identifier">cdeclmacro</span><span class="Punctuation">:</span> <span class="StringLit">&quot;C_DEFINE_VAR&quot;</span><span class="Operator">.</span><span class="Punctuation">}</span>
+
+<span class="Keyword">static</span><span class="Punctuation">:</span>
+  <span class="Keyword">discard</span> <span class="Identifier">quote</span> <span class="Keyword">do</span><span class="Punctuation">:</span>
+    <span class="Keyword">template</span> <span class="Identifier">CDefineVar</span><span class="Operator">*</span><span class="Punctuation">(</span><span class="Identifier">name</span><span class="Punctuation">:</span> <span class="Identifier">untyped</span><span class="Punctuation">,</span> <span class="Identifier">size</span><span class="Punctuation">:</span> <span class="Keyword">static</span><span class="Punctuation">[</span><span class="Identifier">int</span><span class="Punctuation">]</span><span class="Punctuation">)</span> <span class="Operator">=</span>
+      <span class="Keyword">var</span> <span class="Identifier">name</span><span class="Operator">*</span> <span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">inject</span><span class="Punctuation">,</span> <span class="Identifier">importc</span><span class="Punctuation">,</span> <span class="Identifier">nodecl</span><span class="Operator">.</span><span class="Punctuation">}</span><span class="Punctuation">:</span> <span class="Identifier">array</span><span class="Punctuation">[</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Identifier">int</span><span class="Punctuation">]</span>
+    <span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">emit</span><span class="Punctuation">:</span> <span class="StringLit">&quot;/*VARSECTION*/</span><span class="EscapeSequence">\n</span><span class="StringLit">C_DEFINE_VAR($1, $2); &quot;</span> <span class="Operator">%</span> <span class="Punctuation">[</span> <span class="Identifier">symbolName</span><span class="Punctuation">(</span><span class="Identifier">name</span><span class="Punctuation">)</span><span class="Punctuation">,</span> <span class="Operator">$</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Punctuation">]</span> <span class="Operator">.</span><span class="Punctuation">}</span></pre>
 
 </dd>
 </div>
@@ -208,7 +217,7 @@ window.addEventListener('DOMContentLoaded', main);
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-05 22:26:11 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-05 22:45:02 UTC</small>
       </div>
     </div>
   </div>

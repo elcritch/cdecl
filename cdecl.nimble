@@ -18,6 +18,6 @@ task gendocs, "generate docs":
 task readme, "generate readme":
   exec("mddoc src/cdecl.nim ")
 
-task updatedocs, "update release":
+task alldocs, "update release":
   gendocsTask()
   readmeTask()
