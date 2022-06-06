@@ -50,7 +50,7 @@ import cdecl
 
 # Wrap a C Macro that stakes an C macro label and a size to create a new array variable
 proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
-  cdeclmacro: "C_DEFINE_VAR".}
+  cdeclmacro: "C_DEFINE_VAR", global.}
 
 # Then it's possible to invoke CDefineVar to call the C macro and
 # generate a variable:
