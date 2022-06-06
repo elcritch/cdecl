@@ -53,15 +53,22 @@ test "test duo myVar declaration":
   let res = myVarDuo == testVal
   check res
 
-# proc CDefineVarTrio*(name: CToken, size: static[int], otherCVar: CToken): array[size, int] {.
-#   cdeclmacro: "C_DEFINE_VAR".}
+proc CDefineVarStack*(name: CToken, size: static[int]): array[size, int] {.
+  cdeclmacro: "C_DEFINE_VAR".}
 
-# CDefineVarTrio(myVarDuo, 5)
  
-# test "test duo myVar declaration":
-#   let testVal = [1,2,3,4,5]
-#   myVarDuo[0..4] = testVal
-#   check myVarDuo.len() == 5
-#   echo "myVar: ", repr myVarDuo
-#   let res = myVarDuo == testVal
-#   check res
+test "test myVar stack declaration":
+  CDefineVarStack(myVarStack, 5)
+  let testVal = [1,2,3,4,5]
+  myVarStack[0..4] = testVal
+  check myVarStack.len() == 5
+  echo "myVar: ", repr myVarStack
+  let res = myVarStack == testVal
+  check res
+
+test "test myVar stack no-declaration":
+
+  const canCompileMissingVar = 
+      compiles do:
+        echo myVarStack.repr
+  check canCompileMissingVar == false
