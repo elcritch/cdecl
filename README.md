@@ -29,8 +29,10 @@ C code for calling the macro. Additionally it defines
 a new Nim variable using importc which imports the 
 declared variable.   
 
-The macro will pass any extra pragmas to the variable. This
-can be used to declare the variable global or not.  
+The macro will pass any extra pragmas to the
+variable. If the `global` pragma is passed in
+the emitted C code will be put in the 
+`/*VARSECTION*/` section. 
 
 
 ## Example
