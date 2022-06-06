@@ -9,11 +9,14 @@ import macroutils
 
 template mname(node: NimNode) = macroutils.name(node)
 
-macro symbolName*(x: untyped): string =
-  x.toStrLit
-
 type
   CToken* = static[string]
+  CRawStr* = distinct static[string]
+
+macro symbolName*(x: untyped): string =
+  x.toStrLit
+template symbolVal*(x: CRawStr): string =
+  x.string
 
 template cname*(name: untyped): CToken =
   symbolName(name)
@@ -61,8 +64,8 @@ macro cdeclmacro*(name: string, def: untyped) =
   var args = params[1..^1]
 
   let isGlobal = prags.toSeq().anyIt(it.repr == "global")
-  echo fmt"prags: {prags.treeRepr=}"
-  echo fmt"props: {isGlobal=}"
+  # echo fmt"prags: {prags.treeRepr=}"
+  # echo fmt"props: {isGlobal=}"
 
   var ctoks: seq[NimNode]
   var cFmtArgs = Bracket(varNameStr)
@@ -71,6 +74,10 @@ macro cdeclmacro*(name: string, def: untyped) =
       ctoks.add arg.mname()
       arg.typ= ident "untyped"
       cFmtArgs.add Call("symbolName", arg.mname)
+    elif arg.kind == nnkIdentDefs and arg.typ.repr == "CRawStr":
+      ctoks.add arg.mname()
+      arg.typ= ident "CRawStr"
+      cFmtArgs.add Call("symbolVal", arg.mname)
     elif arg.kind == nnkIdentDefs:
       if arg[1].kind != nnkBracketExpr:
         error("arguments to `CDefineVar` must be wrapped in static[T]. Perhaps try `static[$1]`" % [ arg[0].repr ] )
@@ -100,7 +107,7 @@ macro cdeclmacro*(name: string, def: untyped) =
   result.params= FormalParams(Empty(), args)
   if isGlobal:
     result.forNode(nnkPragmaExpr, proc (x: NimNode): NimNode =
-      echo fmt"found: {x.treeRepr=}"
+      # echo fmt"found: {x.treeRepr=}"
       x[1].add ident "global"
       x
     )
