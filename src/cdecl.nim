@@ -2,7 +2,7 @@
 # exports the main API in this file. Note that you cannot rename this file
 # but you can remove it if you wish.
 
-import macros
+import macros, sugar
 import strformat, strutils, sequtils
 
 import macroutils
@@ -60,6 +60,10 @@ macro cdeclmacro*(name: string, def: untyped) =
   let prags = macroutils.pragmas(def)
   var args = params[1..^1]
 
+  let isGlobal = prags.toSeq().anyIt(it.repr == "global")
+  echo fmt"prags: {prags.treeRepr=}"
+  echo fmt"props: {isGlobal=}"
+
   var ctoks: seq[NimNode]
   var cFmtArgs = Bracket(varNameStr)
   for arg in args.mitems:
@@ -80,7 +84,9 @@ macro cdeclmacro*(name: string, def: untyped) =
   elif ctoks.len() > 1:
     warning("mutiple `CToken` arguments passed to `CDefineVar`, only the first one `$1` will be created as a Nim variable. " % [$ctoks[0].mname])
 
-  var cFmtStr = "/*VARSECTION*/\n$1("
+  var cFmtStr = ""
+  if isGlobal: cFmtStr &= "/*VARSECTION*/\n"
+  cFmtStr &= "$1("
   cFmtStr &= toSeq(0..<args.len()).mapIt("$" & $(it+2)).join(", ")
   cFmtStr &= "); /* CDefineVar macro invocation */"
   let cFmtLit = newLit(cFmtStr)
@@ -88,10 +94,19 @@ macro cdeclmacro*(name: string, def: untyped) =
 
   result = quote do:
     template `procName`() =
-      var `n1` {.inject, importc, nodecl, global.}: `retType`
+      var `n1` {.inject, importc, nodecl.}: `retType`
       {.emit: `cFmtLit` % `cFmtArgs` .}
   
   result.params= FormalParams(Empty(), args)
-  # echo fmt"cmacro: {result.repr=}"
+  if isGlobal:
+    result.forNode(nnkPragmaExpr, proc (x: NimNode): NimNode =
+      echo fmt"found: {x.treeRepr=}"
+      x[1].add ident "global"
+      x
+    )
+  # if isGlobal:
+    # result.pragmas.add ident("global")
+  echo fmt"cmacro: {result.repr=}"
+  # echo fmt"cmacro: {result.treerepr=}"
 
 
