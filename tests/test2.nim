@@ -41,9 +41,9 @@ test "test myVar declaration":
   check canCompilewrongCallSyntax == false
 
 proc CDefineVarDuo*(name: CToken, size: static[int], otherCVar: CToken): array[size, int] {.
-  cdeclmacro: "C_DEFINE_VAR".}
+  cdeclmacro: "C_DEFINE_VAR_DUO", global.}
 
-CDefineVar(myVarDuo, 5)
+CDefineVarDuo(myVarDuo, 5, other)
  
 test "test duo myVar declaration":
   let testVal = [1,2,3,4,5]
@@ -52,3 +52,16 @@ test "test duo myVar declaration":
   echo "myVar: ", repr myVarDuo
   let res = myVarDuo == testVal
   check res
+
+# proc CDefineVarTrio*(name: CToken, size: static[int], otherCVar: CToken): array[size, int] {.
+#   cdeclmacro: "C_DEFINE_VAR".}
+
+# CDefineVarTrio(myVarDuo, 5)
+ 
+# test "test duo myVar declaration":
+#   let testVal = [1,2,3,4,5]
+#   myVarDuo[0..4] = testVal
+#   check myVarDuo.len() == 5
+#   echo "myVar: ", repr myVarDuo
+#   let res = myVarDuo == testVal
+#   check res

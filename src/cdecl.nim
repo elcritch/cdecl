@@ -9,7 +9,7 @@ import macroutils
 
 template mname(node: NimNode) = macroutils.name(node)
 
-macro symbolName*(x: typed): string =
+macro symbolName*(x: untyped): string =
   x.toStrLit
 
 type
