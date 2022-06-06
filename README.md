@@ -5,7 +5,7 @@
 import cdecl
 
 proc CMacroDeclare*(name: CToken, size: static[int], otherName: CToken): array[size, int] {.
-  cdeclmacro: "C_MACRO_VARIABLE_DECLARER".}
+  cdeclmacro: "C_MACRO_VARIABLE_DECLARER", global.}
 
 CMacroDeclare(myVar, 128, someExternalCVariable) # creates myVar
 ```
@@ -19,6 +19,20 @@ CMacroDeclare(myVar, 128, someExternalCVariable) # creates myVar
 macro cdeclmacro(name: string; def: untyped)
 ```
 
+## cdeclmacro docs
+
+Macro helper for wrapping a C macro that declares 
+a new C variable.
+
+It handles emitting the appropriate
+C code for calling the macro. Additionally it defines
+a new Nim variable using importc which imports the 
+declared variable.   
+
+The macro will pass any extra pragmas to the variable. This
+can be used to declare the variable global or not.  
+
+
 ## Example
 
 Basic Usage:
@@ -30,7 +44,6 @@ import cdecl
 {.emit: """/*TYPESECTION*/
     /* define example C Macro for testing */
     #define C_DEFINE_VAR(NM, SZ) int NM[SZ]
-    #define C_DEFINE_VAR_DUO(NM, SZ, NM2) int NM[SZ]
     """.}
 
 # Wrap a C Macro that stakes an C macro label and a size to create a new array variable
@@ -48,6 +61,28 @@ static:
     template CDefineVar*(name: untyped, size: static[int]) =
       var name* {.inject, importc, nodecl.}: array[size, int]
     {.emit: "/*VARSECTION*/\nC_DEFINE_VAR($1, $2); " % [ symbolName(name), $size, ] .}
+```
+
+## Example CRawStr
+
+```nim
+import macros
+import cdecl 
+
+{.emit: """/*TYPESECTION*/
+/* define example C Macro for testing */
+#define C_DEFINE_VAR_ADDITION(NM, SZ, N2) \
+  int32_t NM[SZ]; \
+  NM[0] = N2
+""".}
+
+proc CDefineVarStackRaw*(name: CToken, size: static[int], otherRaw: CRawStr): array[size, int32] {.
+  cdeclmacro: "C_DEFINE_VAR_ADDITION".}
+
+# Pass a raw string to the C macro:
+proc runCDefineVarStackRaw() =
+  CDefineVarStackRaw(myVarStackRaw, 5, CRawStr("40+2"))
+  assert myVarStackRaw[0] == 42
 ```
 
 ## TODO
