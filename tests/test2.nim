@@ -83,11 +83,8 @@ proc CDefineVarStackRaw*(name: CToken, size: static[int], otherRaw: CRawStr): ar
  
 proc runCDefineVarStackRaw() =
   CDefineVarStackRaw(myVarStackRaw, 5, CRawStr("40+2"))
-  let testVal = [1'i32,2,3,4,5]
-  myVarStackRaw[0..4] = testVal
-  # let testVal = [42'i32,2,3,4,5]
-  # for i in 1..4:
-    # myVarStackRaw[1] = testVal[1]
+  let testVal = [42'i32,1,2,3,4]
+  myVarStackRaw[1..4] = testVal[1..^1]
   check myVarStackRaw.len() == 5
   echo "myVarStackRaw: ", repr myVarStackRaw
   let res = myVarStackRaw == testVal
