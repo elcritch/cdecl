@@ -144,7 +144,8 @@ macro cdeclmacro*(name: string, def: untyped) =
     let nm = ident name
     var vd = quote do:
       var `nm` {.inject, importc, nodecl.}: `rtype`
-    vd[0][0][1].add ident "global"
+    if isGlobal:
+      vd[0][0][1].add ident "global"
     echo fmt"{vd.treeRepr=}"
     varDecls.add vd
   

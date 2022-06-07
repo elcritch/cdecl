@@ -46,7 +46,7 @@ test "test myVar declaration":
   check canCompilewrongCallSyntax == false
 
 proc CDefineVarDuo*(name: CToken, size: static[int], otherCVar: CToken): array[size, int32] {.
-  cdeclmacro: "C_DEFINE_VAR_DUO", global.}
+  cdeclmacro: "C_DEFINE_VAR_DUO", global, cdeclsVar(name -> array[size, int32]).}
 
 CDefineVarDuo(myVarDuo, 5, other)
  
@@ -59,7 +59,7 @@ test "test duo myVar declaration":
   check res
 
 proc CDefineVarStack*(name: CToken, size: static[int]): array[size, int32] {.
-  cdeclmacro: "C_DEFINE_VAR".}
+  cdeclmacro: "C_DEFINE_VAR", cdeclsVar(name -> array[size, int32]).}
  
 proc runCDefineVarStack() =
   CDefineVarStack(myVarStack, 5)
@@ -81,7 +81,7 @@ test "test myVar stack no-declaration":
   check canCompileMissingVar == false
 
 proc CDefineVarStackRaw*(name: CToken, size: static[int], otherRaw: CRawStr): array[size, int32] {.
-  cdeclmacro: "C_DEFINE_VAR_ADDITION".}
+  cdeclmacro: "C_DEFINE_VAR_ADDITION", cdeclsVar(name -> array[size, int32]).}
  
 proc runCDefineVarStackRaw() =
   CDefineVarStackRaw(myVarStackRaw, 5, CRawStr("40+2"))
