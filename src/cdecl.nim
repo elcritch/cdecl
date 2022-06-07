@@ -142,9 +142,9 @@ macro cdeclmacro*(name: string, def: untyped) =
   var varDecls = newStmtList()
   for name, rtype in decls:
     let nm = ident name
-    # var ps = Pragma(ident "inject", ident "importc", ident "nodecl")
     var vd = quote do:
       var `nm` {.inject, importc, nodecl.}: `rtype`
+    vd[0][0][1].add ident "global"
     echo fmt"{vd.treeRepr=}"
     varDecls.add vd
   
