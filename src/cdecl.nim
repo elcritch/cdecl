@@ -66,7 +66,7 @@ macro cdeclmacro*(name: string, def: untyped) =
       NM[0] = N2
     """.}
 
-    proc CDefineVarStackRaw*(name: CToken, size: static[int], otherRaw: CRawStr): array[size, int32] {.
+    proc CDefineVarStackRaw*(name: CToken, size: static[int], otherRaw: CRawStr) {.
       cdeclmacro: "C_DEFINE_VAR_ADDITION", cdeclsVar(name -> array[size, int32]).}
     
     # Pass a raw string to the C macro:
