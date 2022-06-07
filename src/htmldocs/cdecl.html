@@ -178,8 +178,9 @@ window.addEventListener('DOMContentLoaded', main);
 <dd>
 
 <p>Macro helper for wrapping a C macro that declares a new C variable.</p>
-<p>It handles emitting the appropriate C code for calling the macro. Additionally it defines a new Nim variable using importc which imports the declared variable.</p>
-<p>The macro will pass any extra pragmas to the variable. This can be used to declare the variable global or not. </p>
+<p>It handles emitting the appropriate C code for calling the macro.</p>
+<p>It can define Nim variables using importc to wrap the generated variable. This is done using <tt class="docutils literal"><span class="pre"><span class="Identifier">varName</span><span class="Punctuation">:</span> <span class="Identifier">CToken</span></span></tt> in the argument list and adding a <tt class="docutils literal"><span class="pre"><span class="Identifier">cdeclsVar</span><span class="Punctuation">(</span><span class="Identifier">varName</span> <span class="Operator">-&gt;</span> <span class="Identifier">varType</span><span class="Punctuation">)</span></span></tt> pragma. The <tt class="docutils literal"><span class="pre"><span class="Identifier">cdeclsVar</span></span></tt> tells the macro which CToken argument to use and its type.</p>
+<p>The macro will pass any extra pragmas to the variable. If the <tt class="docutils literal"><span class="pre"><span class="Identifier">global</span></span></tt> pragma is passed in the emitted C code will be put in the <tt class="docutils literal"><span class="pre"><span class="Operator">/*</span><span class="Identifier">VARSECTION</span><span class="Operator">*/</span></span></tt> section. </p>
 
 <p><strong class="examples_text">Example:</strong></p>
 <pre class="listing"><span class="Keyword">import</span> <span class="Identifier">macros</span>
@@ -192,7 +193,7 @@ window.addEventListener('DOMContentLoaded', main);
     &quot;&quot;&quot;</span><span class="Operator">.</span><span class="Punctuation">}</span>
 
 <span class="Keyword">proc</span> <span class="Identifier">CDefineVar</span><span class="Operator">*</span><span class="Punctuation">(</span><span class="Identifier">name</span><span class="Punctuation">:</span> <span class="Identifier">CToken</span><span class="Punctuation">,</span> <span class="Identifier">size</span><span class="Punctuation">:</span> <span class="Keyword">static</span><span class="Punctuation">[</span><span class="Identifier">int</span><span class="Punctuation">]</span><span class="Punctuation">)</span><span class="Punctuation">:</span> <span class="Identifier">array</span><span class="Punctuation">[</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Identifier">int</span><span class="Punctuation">]</span> <span class="Punctuation">{</span><span class="Operator">.</span>
-  <span class="Identifier">cdeclmacro</span><span class="Punctuation">:</span> <span class="StringLit">&quot;C_DEFINE_VAR&quot;</span><span class="Operator">.</span><span class="Punctuation">}</span>
+  <span class="Identifier">cdeclmacro</span><span class="Punctuation">:</span> <span class="StringLit">&quot;C_DEFINE_VAR&quot;</span><span class="Punctuation">,</span> <span class="Identifier">cdeclsVar</span><span class="Punctuation">(</span><span class="Identifier">name</span> <span class="Operator">-&gt;</span> <span class="Identifier">array</span><span class="Punctuation">[</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Identifier">int32</span><span class="Punctuation">]</span><span class="Punctuation">)</span><span class="Operator">.</span><span class="Punctuation">}</span>
 
 <span class="Comment"># Then it's possible to invoke CDefineVar to call the C macro and</span>
 <span class="Comment"># generate a variable:</span>
@@ -217,7 +218,7 @@ window.addEventListener('DOMContentLoaded', main);
     &quot;&quot;&quot;</span><span class="Operator">.</span><span class="Punctuation">}</span>
 
 <span class="Keyword">proc</span> <span class="Identifier">CDefineVarStackRaw</span><span class="Operator">*</span><span class="Punctuation">(</span><span class="Identifier">name</span><span class="Punctuation">:</span> <span class="Identifier">CToken</span><span class="Punctuation">,</span> <span class="Identifier">size</span><span class="Punctuation">:</span> <span class="Keyword">static</span><span class="Punctuation">[</span><span class="Identifier">int</span><span class="Punctuation">]</span><span class="Punctuation">,</span> <span class="Identifier">otherRaw</span><span class="Punctuation">:</span> <span class="Identifier">CRawStr</span><span class="Punctuation">)</span><span class="Punctuation">:</span> <span class="Identifier">array</span><span class="Punctuation">[</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Identifier">int32</span><span class="Punctuation">]</span> <span class="Punctuation">{</span><span class="Operator">.</span>
-  <span class="Identifier">cdeclmacro</span><span class="Punctuation">:</span> <span class="StringLit">&quot;C_DEFINE_VAR_ADDITION&quot;</span><span class="Operator">.</span><span class="Punctuation">}</span>
+  <span class="Identifier">cdeclmacro</span><span class="Punctuation">:</span> <span class="StringLit">&quot;C_DEFINE_VAR_ADDITION&quot;</span><span class="Punctuation">,</span> <span class="Identifier">cdeclsVar</span><span class="Punctuation">(</span><span class="Identifier">name</span> <span class="Operator">-&gt;</span> <span class="Identifier">array</span><span class="Punctuation">[</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Identifier">int32</span><span class="Punctuation">]</span><span class="Punctuation">)</span><span class="Operator">.</span><span class="Punctuation">}</span>
 
 <span class="Comment"># Pass a raw string to the C macro:</span>
 <span class="Keyword">proc</span> <span class="Identifier">runCDefineVarStackRaw</span><span class="Punctuation">(</span><span class="Punctuation">)</span> <span class="Operator">=</span>
@@ -265,7 +266,7 @@ window.addEventListener('DOMContentLoaded', main);
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-06 05:23:17 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-07 08:06:57 UTC</small>
       </div>
     </div>
   </div>

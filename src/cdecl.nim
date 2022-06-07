@@ -50,7 +50,7 @@ macro cdeclmacro*(name: string, def: untyped) =
     """.}
 
     proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
-      cdeclmacro: "C_DEFINE_VAR".}
+      cdeclmacro: "C_DEFINE_VAR", cdeclsVar(name -> array[size, int32]).}
     
     # Then it's possible to invoke CDefineVar to call the C macro and
     # generate a variable:
@@ -76,7 +76,7 @@ macro cdeclmacro*(name: string, def: untyped) =
     """.}
 
     proc CDefineVarStackRaw*(name: CToken, size: static[int], otherRaw: CRawStr): array[size, int32] {.
-      cdeclmacro: "C_DEFINE_VAR_ADDITION".}
+      cdeclmacro: "C_DEFINE_VAR_ADDITION", cdeclsVar(name -> array[size, int32]).}
     
     # Pass a raw string to the C macro:
     proc runCDefineVarStackRaw() =
