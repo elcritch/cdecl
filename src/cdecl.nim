@@ -89,7 +89,7 @@ macro cdeclmacro*(name: string, def: untyped) =
   let generics = macroutils.generics(def)
   var args = params[1..^1]
 
-  let isGlobal = prags.toSeq().anyIt(it.repr == "global")
+  let isGlobal = prags.toSeq().anyIt(it.repr.eqIdent "global")
   var decls = initTable[string, NimNode]()
   echo fmt"prags: {prags.treeRepr=}"
   for prag in prags:
@@ -108,11 +108,11 @@ macro cdeclmacro*(name: string, def: untyped) =
   var ctoks: seq[NimNode]
   var cFmtArgs = Bracket(varNameStr)
   for arg in args.mitems:
-    if arg.kind == nnkIdentDefs and arg.typ.repr == "CToken":
+    if arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CToken"):
       ctoks.add arg.mname()
       arg.typ= ident "untyped"
       cFmtArgs.add Call("symbolName", arg.mname)
-    elif arg.kind == nnkIdentDefs and arg.typ.repr == "CRawStr":
+    elif arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CRawStr"):
       ctoks.add arg.mname()
       arg.typ= ident "CRawStr"
       cFmtArgs.add Call("symbolVal", arg.mname)
