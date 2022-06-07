@@ -2,7 +2,7 @@
 # exports the main API in this file. Note that you cannot rename this file
 # but you can remove it if you wish.
 
-import macros, sugar
+import macros, sugar, tables
 import strformat, strutils, sequtils
 
 import macroutils
@@ -84,13 +84,26 @@ macro cdeclmacro*(name: string, def: untyped) =
   let varName = ident(name.strVal) 
   let procName = macroutils.name(def)
   var params = macroutils.params(def)
-  let retType = params[0]
+  # let retType = params[0]
   let prags = macroutils.pragmas(def)
+  let generics = macroutils.generics(def)
   var args = params[1..^1]
 
   let isGlobal = prags.toSeq().anyIt(it.repr == "global")
-  # echo fmt"prags: {prags.treeRepr=}"
-  # echo fmt"props: {isGlobal=}"
+  var decls = initTable[string, NimNode]()
+  echo fmt"prags: {prags.treeRepr=}"
+  for prag in prags:
+    if prag.kind == nnkCall and prag[0].eqident("cdeclsVar"):
+      let vn = prag[1]
+      echo fmt"{vn.treeRepr=}"
+      if vn.kind != nnkInfix or not vn[0].eqIdent("->"):
+        error("must pass cdeclsVar argument of `name -> type`")
+      let name = vn[1].repr
+      let rType = vn[2]
+      decls[name] = rType
+  for k, v in decls:
+    echo fmt"cdeclvars: {k=} {v.repr=}"
+  echo fmt"props: {isGlobal=}"
 
   var ctoks: seq[NimNode]
   var cFmtArgs = Bracket(varNameStr)
@@ -111,9 +124,11 @@ macro cdeclmacro*(name: string, def: untyped) =
       cFmtArgs.add Call("$", arg.mname)
     else:
       error("arguments to `CDefineVar` must a type wrapped in `static[T] or be a `CToken`. Instead got: $1." % [repr(arg)]  )
-  if ctoks.len() == 0:
-    error("arguments to `CDefineVar` must have at least one `CToken` to be use for the variable declaration. ")
-  elif ctoks.len() > 1:
+  
+  echo fmt"{ctoks.repr=}"
+  # if ctoks.len() == 0:
+    # error("arguments to `CDefineVar` must have at least one `CToken` to be use for the variable declaration. ")
+  if ctoks.len() > 1:
     warning("mutiple `CToken` arguments passed to `CDefineVar`, only the first one `$1` will be created as a Nim variable. " % [$ctoks[0].mname])
 
   var cFmtStr = ""
@@ -124,20 +139,23 @@ macro cdeclmacro*(name: string, def: untyped) =
   let cFmtLit = newLit(cFmtStr)
   let n1 = args[0].mname
 
+  var varDecls = newStmtList()
+  for name, rtype in decls:
+    let nm = ident name
+    # var ps = Pragma(ident "inject", ident "importc", ident "nodecl")
+    var vd = quote do:
+      var `nm` {.inject, importc, nodecl.}: `rtype`
+    echo fmt"{vd.treeRepr=}"
+    varDecls.add vd
+  
+  echo fmt"{varDecls.repr=}"
+
   result = quote do:
     template `procName`() =
-      var `n1` {.inject, importc, nodecl.}: `retType`
+      `varDecls`
       {.emit: `cFmtLit` % `cFmtArgs` .}
   
   result.params= FormalParams(Empty(), args)
-  if isGlobal:
-    result.forNode(nnkPragmaExpr, proc (x: NimNode): NimNode =
-      # echo fmt"found: {x.treeRepr=}"
-      x[1].add ident "global"
-      x
-    )
-  # if isGlobal:
-    # result.pragmas.add ident("global")
   echo fmt"cmacro: {result.repr=}"
   # echo fmt"cmacro: {result.treerepr=}"
 

@@ -20,10 +20,12 @@ type
 #define C_DEFINE_VAR_ADDITION(NM, SZ, N2) \
   int32_t NM[SZ]; \
   NM[0] = N2
+
+#define C_PRINT(FS, AA, BB) printf(FS, AA, BB)
 """.}
 
-proc CDefineVar*(name: CToken, size: static[int]): array[size, int32] {.
-  cdeclmacro: "C_DEFINE_VAR".}
+proc CDefineVar*( name: CToken, size: static[int]) {.
+  cdeclmacro: "C_DEFINE_VAR", cdeclsVar(name -> array[size, int32]).}
 
 const canCompilewrongCallSyntax = 
     compiles do:
@@ -92,3 +94,12 @@ proc runCDefineVarStackRaw() =
 
 test "test myVar stack with raw":
   runCDefineVarStackRaw()
+
+proc CPRINT*(fs: static[string], name: static[string], otherRaw: static[int])  {.
+  cdeclmacro: "C_PRINT".}
+ 
+proc runCDefineVarRaw() =
+  CPRINT("%s => %d", "hello", 22)
+
+test "test myVar stack with raw":
+  runCDefineVarRaw()

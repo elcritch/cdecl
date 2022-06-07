@@ -1,5 +1,5 @@
 
-# API: cdecl
+# CDecl: Easy wrapper generation for C/C++ declaration macros
 
 ```nim
 import cdecl
