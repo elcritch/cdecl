@@ -40,7 +40,7 @@ macro cdeclmacro*(name: string, def: untyped) =
     #define C_DEFINE_VAR_DUO(NM, SZ, NM2) int NM[SZ]
     """.}
 
-    proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
+    proc CDefineVar*(name: CToken, size: static[int]) {.
       cdeclmacro: "C_DEFINE_VAR", cdeclsVar(name -> array[size, int32]).}
     
     # Then it's possible to invoke CDefineVar to call the C macro and
@@ -79,11 +79,13 @@ macro cdeclmacro*(name: string, def: untyped) =
   let varName = ident(name.strVal) 
   let procName = macroutils.name(def)
   var params = macroutils.params(def)
-  # let retType = params[0]
+  let retType = params[0]
   let prags = macroutils.pragmas(def)
   let generics = macroutils.generics(def)
   var args = params[1..^1]
 
+  if retType.kind != nnkEmpty:
+    error("cdeclmacro doesn't take return type. See `cdeclsVar` for how to declare a variable and its type ")
   let isGlobal = prags.toSeq().anyIt(it.repr.eqIdent "global")
   var decls = initTable[string, NimNode]()
 

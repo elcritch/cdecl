@@ -45,7 +45,7 @@ test "test myVar declaration":
 
   check canCompilewrongCallSyntax == false
 
-proc CDefineVarDuo*(name: CToken, size: static[int], otherCVar: CToken): array[size, int32] {.
+proc CDefineVarDuo*(name: CToken, size: static[int], otherCVar: CToken) {.
   cdeclmacro: "C_DEFINE_VAR_DUO", global, cdeclsVar(name -> array[size, int32]).}
 
 CDefineVarDuo(myVarDuo, 5, other)
@@ -58,7 +58,7 @@ test "test duo myVar declaration":
   let res = myVarDuo == testVal
   check res
 
-proc CDefineVarStack*(name: CToken, size: static[int]): array[size, int32] {.
+proc CDefineVarStack*(name: CToken, size: static[int]) {.
   cdeclmacro: "C_DEFINE_VAR", cdeclsVar(name -> array[size, int32]).}
  
 proc runCDefineVarStack() =
@@ -80,7 +80,7 @@ test "test myVar stack no-declaration":
         echo myVarStack.repr
   check canCompileMissingVar == false
 
-proc CDefineVarStackRaw*(name: CToken, size: static[int], otherRaw: CRawStr): array[size, int32] {.
+proc CDefineVarStackRaw*(name: CToken, size: static[int], otherRaw: CRawStr) {.
   cdeclmacro: "C_DEFINE_VAR_ADDITION", cdeclsVar(name -> array[size, int32]).}
  
 proc runCDefineVarStackRaw() =
@@ -100,6 +100,21 @@ proc CPRINT*(fs: static[string], name: static[string], otherRaw: static[int])  {
  
 proc runCDefineVarRaw() =
   CPRINT("%s => %d", "hello", 22)
+  echo ""
 
-test "test myVar stack with raw":
+test "test raw c arguments":
   runCDefineVarRaw()
+
+template CDefineVarDuoWrapper*(name: untyped, size: static[int], otherCVar: untyped) =
+  CDefineVarDuo(name, size, otherCVar)
+  echo "name: ", repr(name)
+ 
+CDefineVarDuoWrapper(myVarDuoWrap, 5, other)
+
+test "test duo myVar declaration":
+  let testVal = [1'i32,2,3,4,5]
+  myVarDuoWrap[0..4] = testVal
+  check myVarDuoWrap.len() == 5
+  echo "myVar: ", repr myVarDuoWrap
+  let res = myVarDuoWrap == testVal
+  check res
