@@ -4,30 +4,35 @@
 ```nim
 import cdecl
 
-proc CMacroDeclare*(name: CToken, size: static[int], otherName: CToken): array[size, int] {.
-  cdeclmacro: "C_MACRO_VARIABLE_DECLARER", global.}
+proc CDefineVar*(name: CToken, size: static[int]) {.
+  cdeclmacro: "C_MACRO_VARIABLE_DECLARER", cdeclsVar(name -> array[size, int32]).}
 
 CMacroDeclare(myVar, 128, someExternalCVariable) # creates myVar
 ```
 
 ## **macro** cdeclmacro
 
-<p>Macro helper for wrapping a C macro that declares a new C variable.</p>
-<p>It handles emitting the appropriate C code for calling the macro. Additionally it defines a new Nim variable using importc which imports the declared variable.   </p>
+Macro helper for wrapping a C macro that declares a new C variable.
+
+It handles emitting the appropriate C code for calling the macro. Additionally it defines a new Nim variable using importc which imports the declared variable. 
 
 ```nim
 macro cdeclmacro(name: string; def: untyped)
 ```
-
+ 
 ## cdeclmacro docs
 
 Macro helper for wrapping a C macro that declares 
 a new C variable.
 
 It handles emitting the appropriate
-C code for calling the macro. Additionally it defines
-a new Nim variable using importc which imports the 
-declared variable.   
+C code for calling the macro. 
+
+It can define Nim variables using importc to wrap the
+generated variable. This is done using `varName: CToken` in 
+the argument list and adding a `cdeclsVar(varName -> varType)`
+pragma. The `cdeclsVar` tells the macro which CToken argument
+to use and its type.
 
 The macro will pass any extra pragmas to the
 variable. If the `global` pragma is passed in
