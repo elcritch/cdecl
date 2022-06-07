@@ -24,7 +24,7 @@ type
 #define C_PRINT(FS, AA, BB) printf(FS, AA, BB)
 """.}
 
-proc CDefineVar*( name: CToken, size: static[int]) {.
+proc CDefineVar*(name: CToken, size: static[int]) {.
   cdeclmacro: "C_DEFINE_VAR", cdeclsVar(name -> array[size, int32]).}
 
 const canCompilewrongCallSyntax = 
