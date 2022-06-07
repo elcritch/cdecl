@@ -95,29 +95,23 @@ macro cdeclmacro*(name: string, def: untyped) =
 
   let isGlobal = prags.toSeq().anyIt(it.repr.eqIdent "global")
   var decls = initTable[string, NimNode]()
-  echo fmt"prags: {prags.treeRepr=}"
+
+  ## process pragmas
   for prag in prags:
     if prag.kind == nnkCall and prag[0].eqident("cdeclsVar"):
       let vn = prag[1]
-      echo fmt"{vn.treeRepr=}"
       if vn.kind != nnkInfix or not vn[0].eqIdent("->"):
         error("must pass cdeclsVar argument of `name -> type`")
       let name = vn[1].repr
       let rType = vn[2]
       decls[name] = rType
-  for k, v in decls:
-    echo fmt"cdeclvars: {k=} {v.repr=}"
-  echo fmt"props: {isGlobal=}"
 
-  var ctoks: seq[NimNode]
   var cFmtArgs = Bracket(varNameStr)
   for arg in args.mitems:
     if arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CToken"):
-      ctoks.add arg.mname()
       arg.typ= ident "untyped"
       cFmtArgs.add Call("symbolName", arg.mname)
     elif arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CRawStr"):
-      ctoks.add arg.mname()
       arg.typ= ident "CRawStr"
       cFmtArgs.add Call("symbolVal", arg.mname)
     elif arg.kind == nnkIdentDefs:
@@ -133,12 +127,6 @@ macro cdeclmacro*(name: string, def: untyped) =
     else:
       error("arguments to `CDefineVar` must a type wrapped in `static[T] or be a `CToken`. Instead got: $1." % [repr(arg)]  )
   
-  echo fmt"{ctoks.repr=}"
-  # if ctoks.len() == 0:
-    # error("arguments to `CDefineVar` must have at least one `CToken` to be use for the variable declaration. ")
-  if ctoks.len() > 1:
-    warning("mutiple `CToken` arguments passed to `CDefineVar`, only the first one `$1` will be created as a Nim variable. " % [$ctoks[0].mname])
-
   var cFmtStr = ""
   if isGlobal: cFmtStr &= "/*VARSECTION*/\n"
   cFmtStr &= "$1("
@@ -154,18 +142,15 @@ macro cdeclmacro*(name: string, def: untyped) =
       var `nm` {.inject, importc, nodecl.}: `rtype`
     if isGlobal:
       vd[0][0][1].add ident "global"
-    echo fmt"{vd.treeRepr=}"
     varDecls.add vd
   
-  echo fmt"{varDecls.repr=}"
-
   result = quote do:
     template `procName`() =
       `varDecls`
       {.emit: `cFmtLit` % `cFmtArgs` .}
   
   result.params= FormalParams(Empty(), args)
-  echo fmt"cmacro: {result.repr=}"
+  # echo fmt"cmacro: {result.repr=}"
   # echo fmt"cmacro: {result.treerepr=}"
 
 
