@@ -95,11 +95,11 @@ proc runCDefineVarStackRaw() =
 test "test myVar stack with raw":
   runCDefineVarStackRaw()
 
-# proc CPRINT*(fs: static[string], name: static[string], otherRaw: static[int])  {.
-#   cdeclmacro: "C_PRINT".}
+proc CPRINT*(fs: static[string], name: static[string], otherRaw: static[int])  {.
+  cdeclmacro: "C_PRINT".}
  
-# proc runCDefineVarRaw() =
-#   CPRINT("%s => %d", "hello", 22)
+proc runCDefineVarRaw() =
+  CPRINT("%s => %d", "hello", 22)
 
-# test "test myVar stack with raw":
-#   runCDefineVarRaw()
+test "test myVar stack with raw":
+  runCDefineVarRaw()

@@ -121,7 +121,11 @@ macro cdeclmacro*(name: string, def: untyped) =
         error("arguments to `CDefineVar` must be wrapped in static[T]. Perhaps try `static[$1]`" % [ arg[0].repr ] )
       if arg[1][0].strVal != "static":
         error("arguments to `CDefineVar` must be wrapped in static[T]. Got: " & arg.repr )
-      cFmtArgs.add Call("$", arg.mname)
+      
+      if arg[1][1].eqIdent("string"):
+        cFmtArgs.add Call("repr", arg.mname)
+      else:
+        cFmtArgs.add Call("$", arg.mname)
     else:
       error("arguments to `CDefineVar` must a type wrapped in `static[T] or be a `CToken`. Instead got: $1." % [repr(arg)]  )
   
