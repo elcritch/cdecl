@@ -26,9 +26,13 @@ macro cdeclmacro*(name: string, def: untyped) =
   ## a new C variable.
   ## 
   ## It handles emitting the appropriate
-  ## C code for calling the macro. Additionally it defines
-  ## a new Nim variable using importc which imports the 
-  ## declared variable.   
+  ## C code for calling the macro. 
+  ## 
+  ## It can define Nim variables using importc to wrap the
+  ## generated variable. This is done using `varName: CToken` in 
+  ## the argument list and adding a `cdeclsVar(varName -> varType)`
+  ## pragma. The `cdeclsVar` tells the macro which CToken argument
+  ## to use and its type.
   ## 
   ## The macro will pass any extra pragmas to the
   ## variable. If the `global` pragma is passed in
