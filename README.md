@@ -3,6 +3,8 @@
 
 ```nim
 import cdecl
+import cdecl/cdeclapi
+export cdeclapi # this is needed clients to use the declared apis
 
 proc CDefineVar*(name: CToken, size: static[int]) {.
   cdeclmacro: "C_MACRO_VARIABLE_DECLARER", cdeclsVar(name -> array[size, int32]).}

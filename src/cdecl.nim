@@ -7,19 +7,10 @@ import strformat, strutils, sequtils
 
 import macroutils
 
+import cdecl/cdeclapi
+export cdeclapi
+
 template mname(node: NimNode) = macroutils.name(node)
-
-type
-  CToken* = static[string]
-  CRawStr* = distinct static[string]
-
-macro symbolName*(x: untyped): string =
-  x.toStrLit
-template symbolVal*(x: CRawStr): string =
-  x.string
-
-template cname*(name: untyped): CToken =
-  symbolName(name)
 
 macro cdeclmacro*(name: string, def: untyped) =
   ## Macro helper for wrapping a C macro that declares 
