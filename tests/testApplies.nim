@@ -48,6 +48,17 @@ suite "unpack labels":
       a: 11
       b: 22
     
+  test "test basic capitalized":
+    ## basic fooBar call
+    ## 
+    template Foo(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(foo, blk)
+    
+    Foo:
+      name: "buzz"
+      a: 11
+      b: 22
+    
   test "test with pos arg":
     fooBar("buzz"):
       a: 11

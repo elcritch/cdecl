@@ -49,14 +49,23 @@ macro unpackLabelsAsArgs*(
     callee: typed;
     args: varargs[untyped]
 ): untyped =
-  ## 
-  echo "==============="
-  echo "unpackLabelsAsArgs: ", args.treeRepr
-  echo "callee: ", callee.getType().repr
+  ## unpacks labels
+  runnableExamples:
+    proc foo(name: string = "buzz", a, b: int) =
+      echo name, ":", " a: ", $a, " b: ", $b
+      wasRun = true
+      totalValue = a + b
+    
+    template Foo(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(foo, blk)
+    Foo:
+      name: "buzz"
+      a: 11
+      b: 22
+  
   args.expectKind nnkArgList
   let fnImpl = getImpl(callee)
   let fnParams = macros.params(fnImpl).paramNames()
-  echo "params: ", fnParams.keys().toSeq()
 
   ## parse out params in various formats
   var varList: OrderedTable[int, (string, NimNode)]
@@ -64,37 +73,36 @@ macro unpackLabelsAsArgs*(
   for arg in args:
     if arg.kind == nnkStmtList:
       for labelArg in arg:
+        # handle `label` or `property` arg
         labelArg.expectKind nnkCall
         let
           lname = labelArg[0].strVal
           lstmt = labelArg[1]
-        echo fmt"labelArg: {labelArg.treeRepr=}"
-        let param = fnParams[lname]
-        echo fmt"{param.name=} {param.idx=}"
+          param = fnParams[lname]
         varList[param.idx] = (param.name, lstmt)
-        idx.inc
+        idx = -1
     elif arg.kind == nnkExprEqExpr:
+      # handle regular named parameters
       let
         lname = arg[0].strVal
-        lstmt = arg[1]
+        lstmt = nnkBlockStmt.newTree(newEmptyNode(), arg[1])
       varList[idx] = (lname, lstmt)
       idx.inc
     else:
+      # handle basic types like strlit or intlit
       varList[idx] = ("", arg)
       idx.inc
   
-  echo " "
+  # order arguments
   varList.sort(system.cmp)
+  assert varList.hasKey(-1) == false ## not possible
 
+  # generate actual function call
   result = newCall(callee)
   for idx, (nm, vl) in varList.pairs():
-    echo fmt"varList: {idx=} {vl.treeRepr()}"
     if nm == "":
       result.add vl
     else:
       result.add nnkExprEqExpr.newTree(ident nm, vl)
-
-  echo "result: ", result.treeRepr()
-  echo "\n"
 
 
