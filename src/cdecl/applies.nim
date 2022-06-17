@@ -46,6 +46,45 @@ proc paramNames(node: NimNode): OrderedTable[string, Param] =
 
 var debugPrint* {.compileTime.} = false
 
+proc processLabel(
+    varList: var OrderedTable[int, (string, NimNode)],
+    fnParams: OrderedTable[string, Param],
+    labelArg: NimNode,
+) =
+  if debugPrint:
+    echo fmt"{labelArg.treeRepr=}"
+  labelArg.expectKind nnkCall
+  let
+    lname = labelArg[0].strVal
+    lstmt = labelArg[1]
+    fparam = fnParams[lname]
+  
+
+  if debugPrint:
+    echo fmt"{fparam.name=} "
+    echo fmt"{fparam.typ.treeRepr=}"
+    echo fmt"{lstmt.treeRepr=}"
+    echo fmt"{lstmt.kind == nnkDo =}"
+  if lstmt.kind == nnkDo:
+    let doFmlParam = params(lstmt)
+    let doBody = body(lstmt)
+    echo fmt"{doFmlParam.treeRepr()=}"
+    let plet = quote do:
+        let x = proc () = discard
+    let plambda = plet[0][^1]
+    echo fmt"plet: {plambda.treeRepr()=}"
+    plambda.params= doFmlParam
+    plambda.body= doBody
+    echo fmt"{plambda.treeRepr()=}"
+    let pstmt = quote do:
+        let fn = `plambda`
+        fn
+    echo fmt"{pstmt.treeRepr=} "
+    echo fmt"{pstmt.repr=} "
+    varList[fparam.idx] = (fparam.name, pstmt)
+  else:
+    varList[fparam.idx] = (fparam.name, lstmt)
+
 macro unpackLabelsAsArgs*(
     callee: typed;
     args: varargs[untyped]
@@ -80,7 +119,7 @@ macro unpackLabelsAsArgs*(
     echo fmt"{args.treeRepr=}"
   args.expectKind nnkArgList
   let fnImpl = getImpl(callee)
-  let fnParams = macros.params(fnImpl).paramNames()
+  let fnParams = fnImpl.params().paramNames()
 
   ## parse out params in various formats
   var varList: OrderedTable[int, (string, NimNode)]
@@ -90,39 +129,7 @@ macro unpackLabelsAsArgs*(
       for labelArg in arg:
         # handle `label` or `property` arg
         idx = -1
-        if debugPrint:
-          echo fmt"{labelArg.treeRepr=}"
-        labelArg.expectKind nnkCall
-        let
-          lname = labelArg[0].strVal
-          lstmt = labelArg[1]
-          fparam = fnParams[lname]
-        
-
-        if debugPrint:
-          echo fmt"{fparam.name=} "
-          echo fmt"{fparam.typ.treeRepr=}"
-          echo fmt"{lstmt.treeRepr=}"
-          echo fmt"{lstmt.kind == nnkDo =}"
-        if lstmt.kind == nnkDo:
-          let doFmlParam = params(lstmt)
-          let doBody = body(lstmt)
-          echo fmt"{doFmlParam.treeRepr()=}"
-          let plet = quote do:
-              let x = proc () = discard
-          let plambda = plet[0][^1]
-          echo fmt"plet: {plambda.treeRepr()=}"
-          plambda.params= doFmlParam
-          plambda.body= doBody
-          echo fmt"{plambda.treeRepr()=}"
-          let pstmt = quote do:
-              let fn = `plambda`
-              fn
-          echo fmt"{pstmt.treeRepr=} "
-          echo fmt"{pstmt.repr=} "
-          varList[fparam.idx] = (fparam.name, pstmt)
-        else:
-          varList[fparam.idx] = (fparam.name, lstmt)
+        varList.processLabel(fnParams, labelArg)
     elif arg.kind == nnkExprEqExpr:
       # handle regular named parameters
       let
