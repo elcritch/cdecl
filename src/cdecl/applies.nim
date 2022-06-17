@@ -1,4 +1,4 @@
-import macros, macroutils, tables
+import macros, macroutils, tables, sequtils
 
 macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
   ## Calls `callee` with fields form object `args` unpacked as individual arguments.
@@ -22,11 +22,30 @@ macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): 
     result.add extra
 
 type
-  Attribute* = object
+  Param* = object
     name*: string
-    code*: NimNode
+    typ*: NimNode
+    default*: NimNode
 
 import strformat
+
+proc paramNames(node: NimNode): OrderedTable[string, Param] = 
+  ## args
+  echo "params"
+  node.expectKind nnkFormalParams
+  for paramNode in node[1..^1]:
+    let
+      nms = paramNode[0..<paramNode.len() - 2]
+      tp = paramNode[^2]
+      df = paramNode[^1]
+    echo fmt"{nms.repr=}"
+    echo fmt"{tp.repr=}"
+    echo fmt"{df.repr=}"
+    for nm in nms:
+      let n = nm.strVal
+      let pm = Param(name: n, typ: tp, default: df)
+      result[n] = pm
+
 
 macro unpackLabelsAsArgs*(
     callee: typed;
@@ -37,6 +56,9 @@ macro unpackLabelsAsArgs*(
   echo "callee: ", callee.getType().repr
   body.expectKind nnkArgList
   let fnx = getImpl(callee)
-  echo "fnx: ", fnx.treeRepr()
+  let fnxArgs = macros.params(fnx)
+  echo "fnx: ", fnxArgs.treeRepr()
+  let fnParams = fnxArgs.paramNames()
+  echo "params: ", fnParams.keys().toSeq()
 
 

@@ -26,7 +26,7 @@ suite "rpc methods":
 
   test "test unpackLabelsAsArgs":
     var wasRun = false
-    proc foo(name: string, a, b: int) =
+    proc foo(name: string = "buzz", a, b: int) =
       echo name, ":", " a: ", $a, " b: ", $b
       wasRun = true
     
