@@ -1,6 +1,7 @@
 import unittest
 import cdecl/applies
-import macros
+
+{.push hint[XDeclaredButNotUsed](off).}
 
 suite "unpack object args":
   type AddObj = object
@@ -100,8 +101,6 @@ suite "unpack labels":
     template fizzCall(blk: varargs[untyped]) =
       unpackLabelsAsArgs(fizz, blk)
     
-    static:
-      debugPrint = true
     fizzCall:
       name:
         echo "running func..."
@@ -113,9 +112,6 @@ suite "unpack labels":
     template Fizz(blk: varargs[untyped]) =
       unpackLabelsAsArgs(fizz, blk)
     
-    static:
-      debugPrint = true
-
     let fn = proc (): string = "fizzy"
     Fizz:
       name: fn()

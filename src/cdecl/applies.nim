@@ -1,4 +1,4 @@
-import macros, tables, sequtils
+import macros, tables
 
 macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
   ## Calls `callee` with fields form object `args` unpacked as individual arguments.
@@ -28,8 +28,6 @@ type
     typ*: NimNode
     default*: NimNode
 
-import strformat
-
 proc paramNames(node: NimNode): OrderedTable[string, Param] = 
   ## get all parameters from `FormalParams` in easy form
   node.expectKind nnkFormalParams
@@ -44,26 +42,16 @@ proc paramNames(node: NimNode): OrderedTable[string, Param] =
       result[n] = Param(idx: idx, name: n, typ: tp, default: df)
       idx.inc
 
-var debugPrint* {.compileTime.} = false
-
 proc processLabel(
     varList: var OrderedTable[int, (string, NimNode)],
     fnParams: OrderedTable[string, Param],
     labelArg: NimNode,
 ) =
-  if debugPrint:
-    echo fmt"{labelArg.treeRepr=}"
   labelArg.expectKind nnkCall
   let
     lname = labelArg[0].strVal
     lstmt = labelArg[1]
     fparam = fnParams[lname]
-  
-  if debugPrint:
-    echo fmt"{fparam.name=} "
-    echo fmt"{fparam.typ.treeRepr=}"
-    echo fmt"{lstmt.treeRepr=}"
-    echo fmt"{lstmt.kind == nnkDo =}"
   
   if lstmt.kind == nnkDo:
     let doFmlParam = params(lstmt)
@@ -83,20 +71,12 @@ proc processLabel(
     # if debugPrint: echo fmt"{pstmt.repr=} "
     varList[fparam.idx] = (fparam.name, pstmt)
   elif fparam.typ.kind == nnkProcTy:
-    if debugPrint:
-      echo "fparam is ProcTy: ", fparam.typ.treeRepr
-    let fx = lstmt[0]
-    if debugPrint:
-      echo fmt"fx: {fx.treeRepr=} "
     var pstmt = quote do:
       let fn: proc (): string =
         proc (): string =
           result = "test"
       fn
     
-    if debugPrint:
-      echo fmt"pre pstmt: {pstmt.treeRepr=} "
-
     var
       letSect = pstmt[0]
       idDefs = letSect[0]
@@ -107,10 +87,7 @@ proc processLabel(
     lamDef.params= fparam.typ[0]
     lamDef.body= lstmt
 
-    if debugPrint:
-      echo fmt"pstmt: {pstmt.treeRepr=} "
     varList[fparam.idx] = (fparam.name, pstmt)
-
   else:
     varList[fparam.idx] = (fparam.name, lstmt)
 
@@ -144,8 +121,6 @@ macro unpackLabelsAsArgs*(
       a: 11
       b: 22
   
-  if debugPrint:
-    echo fmt"{args.treeRepr=}"
   args.expectKind nnkArgList
   let fnImpl = getImpl(callee)
   let fnParams = fnImpl.params().paramNames()
