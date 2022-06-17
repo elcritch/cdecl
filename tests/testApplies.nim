@@ -101,7 +101,6 @@ suite "unpack labels":
       unpackLabelsAsArgs(fizz, blk)
     
     let fn = proc (): string = "fizzy"
-
     Fizz:
       name: fn
       a: 11
@@ -112,9 +111,9 @@ suite "unpack labels":
       unpackLabelsAsArgs(fizz, blk)
     static:
       debugPrint = true
-
     fizzCall:
-      name:
-        result = "fizzy"
+      name do () -> string:
+        echo "running func..."
+        "fizzy"
       a: 11
       b: 22

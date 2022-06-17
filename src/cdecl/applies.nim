@@ -1,4 +1,4 @@
-import macros, macroutils, tables, sequtils
+import macros, tables, sequtils
 
 macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
   ## Calls `callee` with fields form object `args` unpacked as individual arguments.
@@ -89,19 +89,40 @@ macro unpackLabelsAsArgs*(
     if arg.kind == nnkStmtList:
       for labelArg in arg:
         # handle `label` or `property` arg
+        idx = -1
         if debugPrint:
           echo fmt"{labelArg.treeRepr=}"
         labelArg.expectKind nnkCall
         let
           lname = labelArg[0].strVal
           lstmt = labelArg[1]
-          param = fnParams[lname]
+          fparam = fnParams[lname]
         
-        # var xx = genSym(nskVar, param.name)
-        # echo fmt"{xx.treeRepr=}"
-        let lstmt2 = nnkBlockStmt.newTree(newEmptyNode(), lstmt)
-        varList[param.idx] = (param.name, lstmt2)
-        idx = -1
+
+        if debugPrint:
+          echo fmt"{fparam.name=} "
+          echo fmt"{fparam.typ.treeRepr=}"
+          echo fmt"{lstmt.treeRepr=}"
+          echo fmt"{lstmt.kind == nnkDo =}"
+        if lstmt.kind == nnkDo:
+          let doFmlParam = params(lstmt)
+          let doBody = body(lstmt)
+          echo fmt"{doFmlParam.treeRepr()=}"
+          let plet = quote do:
+              let x = proc () = discard
+          let plambda = plet[0][^1]
+          echo fmt"plet: {plambda.treeRepr()=}"
+          plambda.params= doFmlParam
+          plambda.body= doBody
+          echo fmt"{plambda.treeRepr()=}"
+          let pstmt = quote do:
+              let fn = `plambda`
+              fn
+          echo fmt"{pstmt.treeRepr=} "
+          echo fmt"{pstmt.repr=} "
+          varList[fparam.idx] = (fparam.name, pstmt)
+        else:
+          varList[fparam.idx] = (fparam.name, lstmt)
     elif arg.kind == nnkExprEqExpr:
       # handle regular named parameters
       let
