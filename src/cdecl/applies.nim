@@ -97,15 +97,15 @@ macro unpackLabelsAsArgs*(
           lstmt = labelArg[1]
           param = fnParams[lname]
         
-        var xx = genSym(nskVar, param.name)
-        echo fmt"{xx.treeRepr=}"
-        varList[param.idx] = (param.name, lstmt)
+        # var xx = genSym(nskVar, param.name)
+        # echo fmt"{xx.treeRepr=}"
+        let lstmt2 = nnkBlockStmt.newTree(newEmptyNode(), lstmt)
+        varList[param.idx] = (param.name, lstmt2)
         idx = -1
     elif arg.kind == nnkExprEqExpr:
       # handle regular named parameters
       let
         lname = arg[0].strVal
-        # lstmt = nnkBlockStmt.newTree(newEmptyNode(), arg[1])
       varList[idx] = (lname, arg[1])
       idx.inc
     else:

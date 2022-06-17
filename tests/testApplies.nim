@@ -88,7 +88,7 @@ suite "unpack labels":
         echo "b arg"
         22
 
-  test "test with block label":
+  test "test with anonymous proc":
     template Fizz(blk: varargs[untyped]) =
       unpackLabelsAsArgs(fizz, blk)
     
@@ -96,15 +96,25 @@ suite "unpack labels":
       a: 11
       b: 22
 
-  test "test with block label":
-    template fizzCall(blk: varargs[untyped]) =
+  test "test with anonymous proc var":
+    template Fizz(blk: varargs[untyped]) =
       unpackLabelsAsArgs(fizz, blk)
-    static:
-      debugPrint = true
-
+    
     let fn = proc (): string = "fizzy"
-    fizzCall:
+
+    Fizz:
       name: fn
       a: 11
       b: 22
 
+  # test "test with special case empty proc":
+  #   template fizzCall(blk: varargs[untyped]) =
+  #     unpackLabelsAsArgs(fizz, blk)
+  #   static:
+  #     debugPrint = true
+
+  #   fizzCall:
+  #     name:
+  #       result = "fizzy"
+  #     a: 11
+  #     b: 22
