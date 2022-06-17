@@ -44,16 +44,51 @@ proc paramNames(node: NimNode): OrderedTable[string, Param] =
       result[n] = Param(idx: idx, name: n, typ: tp, default: df)
       idx.inc
 
+
 macro unpackLabelsAsArgs*(
     callee: typed;
-    body: varargs[untyped]
+    args: varargs[untyped]
 ): untyped =
   ## 
-  echo "unpackLabelsAsArgs: ", body.treeRepr
+  echo "==============="
+  echo "unpackLabelsAsArgs: ", args.treeRepr
   echo "callee: ", callee.getType().repr
-  body.expectKind nnkArgList
+  args.expectKind nnkArgList
   let fnImpl = getImpl(callee)
   let fnParams = macros.params(fnImpl).paramNames()
   echo "params: ", fnParams.keys().toSeq()
+
+  ## parse out params in various formats
+  var varList: OrderedTable[int, (string, NimNode)]
+  var idx = 0
+  for arg in args:
+    if arg.kind == nnkStmtList:
+      for labelArg in arg:
+        labelArg.expectKind nnkCall
+        let
+          lname = labelArg[0].strVal
+          lstmt = labelArg[1]
+        echo fmt"labelArg: {labelArg.treeRepr=}"
+        let param = fnParams[lname]
+        echo fmt"{param.name=} {param.idx=}"
+        varList[param.idx] = (param.name, lstmt)
+        idx.inc
+    elif arg.kind == nnkExprEqExpr:
+      let
+        lname = arg[0].strVal
+        lstmt = arg[1]
+      varList[idx] = (lname, lstmt)
+      idx.inc
+    else:
+      varList[idx] = ("", arg)
+      idx.inc
+  
+  echo " "
+  varList.sort(system.cmp)
+
+  for idx, (nm, vl) in varList.pairs():
+    echo fmt"varList: {idx=} {vl.treeRepr()}"
+  echo "result: ", result.treeRepr()
+  echo "\n"
 
 

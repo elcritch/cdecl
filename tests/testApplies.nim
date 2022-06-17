@@ -38,6 +38,7 @@ suite "unpack labels":
     check wasRun
 
   test "test basic":
+    ## basic fooBar call
     fooBar:
       name: "buzz"
       a: 11
@@ -59,7 +60,9 @@ suite "unpack labels":
   test "test with block label":
     fooBar:
       name: "buzz"
-      a: 11
+      a:
+        block:
+          11
       b:
         echo "b arg"
         22
