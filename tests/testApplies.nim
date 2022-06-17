@@ -23,3 +23,37 @@ suite "rpc methods":
     let res = unpackObjectArgs(addDouble, args, true)
     check res == 6
 
+  test "test unpackLabelsAsArgs":
+    var wasRun = false
+    proc foo(name: string, a, b: int) =
+      echo name, ":", " a: ", $a, " b: ", $b
+      wasRun = true
+    
+    template fooBar(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(foo, blk)
+
+    fooBar("buzz"):
+      a: 11
+      b: 22
+    
+    fooBar("buzz", 11):
+      b: 22
+    
+    fooBar("buzz", a = 11):
+      b: 22
+    
+    fooBar:
+      name: "buzz"
+      a: 11
+      b: 22
+    
+    fooBar:
+      name: "buzz"
+      a: 11
+      b:
+        echo "b arg"
+        22
+
+
+    check wasRun
+

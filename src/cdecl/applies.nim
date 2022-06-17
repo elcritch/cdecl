@@ -1,4 +1,4 @@
-import macros, macroutils
+import macros, macroutils, tables
 
 macro unpackObjectArgs*(callee: typed; arg: typed, extras: varargs[untyped]): untyped =
   ## Calls `callee` with fields form object `args` unpacked as individual arguments.
@@ -20,3 +20,19 @@ macro unpackObjectArgs*(callee: typed; arg: typed, extras: varargs[untyped]): un
       `arg`.`nm`
   for extra in extras:
     result.add extra
+
+type
+  Attribute* = object
+    name*: string
+    code*: NimNode
+
+import strformat
+
+macro unpackLabelsAsArgs*(
+    callee: typed;
+    body: varargs[untyped]
+): untyped =
+  ## 
+  echo "unpackLabelsAsArgs: ", body.treeRepr
+  echo "callee: ", callee.getType().repr
+  body.expectKind nnkArgList
