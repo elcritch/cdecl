@@ -27,18 +27,22 @@ suite "unpack object args":
 suite "unpack labels":
   setup:
     var wasRun = false
+    var totalValue = 0
     proc foo(name: string = "buzz", a, b: int) =
       echo name, ":", " a: ", $a, " b: ", $b
       wasRun = true
+      totalValue = a + b
     
     template fooBar(blk: varargs[untyped]) =
       unpackLabelsAsArgs(foo, blk)
 
   teardown:
     check wasRun
+    check totalValue == (11+22)
 
   test "test basic":
     ## basic fooBar call
+    ## 
     fooBar:
       name: "buzz"
       a: 11

@@ -86,8 +86,14 @@ macro unpackLabelsAsArgs*(
   echo " "
   varList.sort(system.cmp)
 
+  result = newCall(callee)
   for idx, (nm, vl) in varList.pairs():
     echo fmt"varList: {idx=} {vl.treeRepr()}"
+    if nm == "":
+      result.add vl
+    else:
+      result.add nnkExprEqExpr.newTree(ident nm, vl)
+
   echo "result: ", result.treeRepr()
   echo "\n"
 
