@@ -36,6 +36,12 @@ suite "unpack labels":
     template fooBar(blk: varargs[untyped]) =
       unpackLabelsAsArgs(foo, blk)
 
+    proc fizz(name: proc (): string, a, b: int) =
+      echo name(), ":", " a: ", $a, " b: ", $b
+      check name() == "fizzy"
+      wasRun = true
+      totalValue = a + b
+    
   teardown:
     check wasRun
     check totalValue == (11+22)
@@ -82,5 +88,23 @@ suite "unpack labels":
         echo "b arg"
         22
 
-    check wasRun
+  test "test with block label":
+    template Fizz(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(fizz, blk)
+    
+    Fizz(name = proc(): string = "fizzy"):
+      a: 11
+      b: 22
+
+  test "test with block label":
+    template fizzCall(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(fizz, blk)
+    static:
+      debugPrint = true
+
+    let fn = proc (): string = "fizzy"
+    fizzCall:
+      name: fn
+      a: 11
+      b: 22
 

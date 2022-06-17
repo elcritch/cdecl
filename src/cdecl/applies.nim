@@ -44,6 +44,7 @@ proc paramNames(node: NimNode): OrderedTable[string, Param] =
       result[n] = Param(idx: idx, name: n, typ: tp, default: df)
       idx.inc
 
+var debugPrint* {.compileTime.} = false
 
 macro unpackLabelsAsArgs*(
     callee: typed;
@@ -53,16 +54,30 @@ macro unpackLabelsAsArgs*(
   runnableExamples:
     proc foo(name: string = "buzz", a, b: int) =
       echo name, ":", " a: ", $a, " b: ", $b
-      wasRun = true
-      totalValue = a + b
     
-    template Foo(blk: varargs[untyped]) =
+    template myFoo(blk: varargs[untyped]) =
       unpackLabelsAsArgs(foo, blk)
-    Foo:
+    
+    myFoo:
       name: "buzz"
       a: 11
       b: 22
   
+  runnableExamples:
+    proc fizz(name: proc (): string, a, b: int) =
+      echo name, ":", " a: ", $a, " b: ", $b
+    
+    template Fizz(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(foo, blk)
+    
+    let fn = proc (): string = "fizzy"
+    Fizz:
+      name: fn
+      a: 11
+      b: 22
+  
+  if debugPrint:
+    echo fmt"{args.treeRepr=}"
   args.expectKind nnkArgList
   let fnImpl = getImpl(callee)
   let fnParams = macros.params(fnImpl).paramNames()
@@ -74,19 +89,24 @@ macro unpackLabelsAsArgs*(
     if arg.kind == nnkStmtList:
       for labelArg in arg:
         # handle `label` or `property` arg
+        if debugPrint:
+          echo fmt"{labelArg.treeRepr=}"
         labelArg.expectKind nnkCall
         let
           lname = labelArg[0].strVal
           lstmt = labelArg[1]
           param = fnParams[lname]
+        
+        var xx = genSym(nskVar, param.name)
+        echo fmt"{xx.treeRepr=}"
         varList[param.idx] = (param.name, lstmt)
         idx = -1
     elif arg.kind == nnkExprEqExpr:
       # handle regular named parameters
       let
         lname = arg[0].strVal
-        lstmt = nnkBlockStmt.newTree(newEmptyNode(), arg[1])
-      varList[idx] = (lname, lstmt)
+        # lstmt = nnkBlockStmt.newTree(newEmptyNode(), arg[1])
+      varList[idx] = (lname, arg[1])
       idx.inc
     else:
       # handle basic types like strlit or intlit
