@@ -100,31 +100,34 @@ suite "unpack labels":
     template Fizz(blk: varargs[untyped]) =
       unpackLabelsAsArgs(fizz, blk)
     
-    let fn = proc (): string = "fizzy"
-    Fizz:
-      name: fn
-      a: 11
-      b: 22
-
-  test "test with special case empty proc":
-    template fizzCall(blk: varargs[untyped]) =
-      unpackLabelsAsArgs(fizz, blk)
-    fizzCall:
-      name do () -> string:
-        echo "running func..."
-        "fizzy"
-      a: 11
-      b: 22
-
-  test "test with special case empty proc":
-    template fizzCall(blk: varargs[untyped]) =
-      unpackLabelsAsArgs(fizz, blk)
-    
     static:
       debugPrint = true
-    fizzCall:
-      name:
-        echo "running func..."
-        "fizzy"
+
+    let fn = proc (): string = "fizzy"
+    Fizz:
+      name: fn()
       a: 11
       b: 22
+
+  # test "test with special case empty proc":
+  #   template fizzCall(blk: varargs[untyped]) =
+  #     unpackLabelsAsArgs(fizz, blk)
+  #   fizzCall:
+  #     name do () -> string:
+  #       echo "running func..."
+  #       "fizzy"
+  #     a: 11
+  #     b: 22
+
+  # test "test with special case empty proc":
+  #   template fizzCall(blk: varargs[untyped]) =
+  #     unpackLabelsAsArgs(fizz, blk)
+    
+  #   static:
+  #     debugPrint = true
+  #   fizzCall:
+  #     name:
+  #       echo "running func..."
+  #       "fizzy"
+  #     a: 11
+  #     b: 22

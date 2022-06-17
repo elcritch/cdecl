@@ -64,7 +64,37 @@ proc processLabel(
     echo fmt"{fparam.typ.treeRepr=}"
     echo fmt"{lstmt.treeRepr=}"
     echo fmt"{lstmt.kind == nnkDo =}"
-  if lstmt.kind == nnkDo:
+  
+  if fparam.typ.kind == nnkProcTy:
+    if debugPrint:
+      echo "fparam is ProcTy: ", fparam.typ.treeRepr
+    let fx = lstmt[0]
+    if debugPrint:
+      echo fmt"fx: {fx.treeRepr=} "
+    var pstmt = quote do:
+      let fn: proc (): string =
+        proc (): string =
+          result = "test"
+      fn
+    
+    if debugPrint:
+      echo fmt"pre pstmt: {pstmt.treeRepr=} "
+
+    var
+      letSect = pstmt[0]
+      idDefs = letSect[0]
+      procTy = idDefs[1]
+      lamDef = idDefs[2]
+
+    procTy[0]= fparam.typ[0]
+    lamDef.params= fparam.typ[0]
+    lamDef.body= lstmt
+
+    if debugPrint:
+      echo fmt"pstmt: {pstmt.treeRepr=} "
+    varList[fparam.idx] = (fparam.name, pstmt)
+
+  elif lstmt.kind == nnkDo:
     let doFmlParam = params(lstmt)
     let doBody = body(lstmt)
     # if debugPrint: echo fmt"{doFmlParam.treeRepr()=}"
