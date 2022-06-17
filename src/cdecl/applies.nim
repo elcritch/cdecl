@@ -56,19 +56,14 @@ proc processLabel(
   if lstmt.kind == nnkDo:
     let doFmlParam = params(lstmt)
     let doBody = body(lstmt)
-    # if debugPrint: echo fmt"{doFmlParam.treeRepr()=}"
     let plet = quote do:
         let x = proc () = discard
     let plambda = plet[0][^1]
-    # if debugPrint: echo fmt"plet: {plambda.treeRepr()=}"
     plambda.params= doFmlParam
     plambda.body= doBody
-    # if debugPrint: echo fmt"{plambda.treeRepr()=}"
     let pstmt = quote do:
         let fn = `plambda`
         fn
-    # if debugPrint: echo fmt"{pstmt.treeRepr=} "
-    # if debugPrint: echo fmt"{pstmt.repr=} "
     varList[fparam.idx] = (fparam.name, pstmt)
   elif fparam.typ.kind == nnkProcTy:
     var pstmt = quote do:
