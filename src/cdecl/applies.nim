@@ -23,6 +23,7 @@ macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): 
 
 type
   Param* = object
+    idx*: int
     name*: string
     typ*: NimNode
     default*: NimNode
@@ -30,22 +31,18 @@ type
 import strformat
 
 proc paramNames(node: NimNode): OrderedTable[string, Param] = 
-  ## args
-  echo "params"
+  ## get all parameters from `FormalParams` in easy form
   node.expectKind nnkFormalParams
+  var idx = 0
   for paramNode in node[1..^1]:
     let
       nms = paramNode[0..<paramNode.len() - 2]
       tp = paramNode[^2]
       df = paramNode[^1]
-    echo fmt"{nms.repr=}"
-    echo fmt"{tp.repr=}"
-    echo fmt"{df.repr=}"
     for nm in nms:
       let n = nm.strVal
-      let pm = Param(name: n, typ: tp, default: df)
-      result[n] = pm
-
+      result[n] = Param(idx: idx, name: n, typ: tp, default: df)
+      idx.inc
 
 macro unpackLabelsAsArgs*(
     callee: typed;
