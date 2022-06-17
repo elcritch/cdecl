@@ -1,6 +1,6 @@
 import macros, macroutils, tables
 
-macro unpackObjectArgs*(callee: typed; arg: typed, extras: varargs[untyped]): untyped =
+macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
   ## Calls `callee` with fields form object `args` unpacked as individual arguments.
   ## 
   ## This is similar to `unpackVarargs` in `std/macros` but for call a function
@@ -36,3 +36,7 @@ macro unpackLabelsAsArgs*(
   echo "unpackLabelsAsArgs: ", body.treeRepr
   echo "callee: ", callee.getType().repr
   body.expectKind nnkArgList
+  let fnx = getImpl(callee)
+  echo "fnx: ", fnx.treeRepr()
+
+

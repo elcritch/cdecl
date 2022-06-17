@@ -1,5 +1,6 @@
 import unittest
 import cdecl/applies
+import macros
 
 suite "rpc methods":
   type AddObj = object
