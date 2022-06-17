@@ -2,7 +2,7 @@ import unittest
 import cdecl/applies
 import macros
 
-suite "rpc methods":
+suite "unpack object args":
   type AddObj = object
     a*: int
     b*: int
@@ -24,7 +24,8 @@ suite "rpc methods":
     let res = unpackObjectArgs(addDouble, args, true)
     check res == 6
 
-  test "test unpackLabelsAsArgs":
+suite "unpack labels":
+  setup:
     var wasRun = false
     proc foo(name: string = "buzz", a, b: int) =
       echo name, ":", " a: ", $a, " b: ", $b
@@ -33,21 +34,29 @@ suite "rpc methods":
     template fooBar(blk: varargs[untyped]) =
       unpackLabelsAsArgs(foo, blk)
 
-    fooBar("buzz"):
-      a: 11
-      b: 22
-    
-    fooBar("buzz", 11):
-      b: 22
-    
-    fooBar("buzz", a = 11):
-      b: 22
-    
+  teardown:
+    check wasRun
+
+  test "test basic":
     fooBar:
       name: "buzz"
       a: 11
       b: 22
     
+  test "test with pos arg":
+    fooBar("buzz"):
+      a: 11
+      b: 22
+    
+  test "test with pos args":
+    fooBar("buzz", 11):
+      b: 22
+    
+  test "test with named args":
+    fooBar("buzz", a = 11):
+      b: 22
+    
+  test "test with block label":
     fooBar:
       name: "buzz"
       a: 11

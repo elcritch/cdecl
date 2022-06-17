@@ -52,10 +52,8 @@ macro unpackLabelsAsArgs*(
   echo "unpackLabelsAsArgs: ", body.treeRepr
   echo "callee: ", callee.getType().repr
   body.expectKind nnkArgList
-  let fnx = getImpl(callee)
-  let fnxArgs = macros.params(fnx)
-  echo "fnx: ", fnxArgs.treeRepr()
-  let fnParams = fnxArgs.paramNames()
+  let fnImpl = getImpl(callee)
+  let fnParams = macros.params(fnImpl).paramNames()
   echo "params: ", fnParams.keys().toSeq()
 
 
