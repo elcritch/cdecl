@@ -119,15 +119,15 @@ suite "unpack labels":
       a: 11
       b: 22
 
-  # test "test with special case empty proc":
-  #   template fizzCall(blk: varargs[untyped]) =
-  #     unpackLabelsAsArgs(fizz, blk)
+  test "test with special case empty proc":
+    template fizzCall(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(fizz, blk)
     
-  #   static:
-  #     debugPrint = true
-  #   fizzCall:
-  #     name:
-  #       echo "running func..."
-  #       "fizzy"
-  #     a: 11
-  #     b: 22
+    static:
+      debugPrint = true
+    fizzCall:
+      name:
+        echo "running func..."
+        "fizzy"
+      a: 11
+      b: 22
