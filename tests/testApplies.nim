@@ -55,6 +55,5 @@ suite "rpc methods":
         echo "b arg"
         22
 
-
     check wasRun
 
