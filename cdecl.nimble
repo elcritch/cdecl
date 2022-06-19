@@ -1,14 +1,12 @@
 # Package
 
-version       = "0.4.0"
+version       = "0.5.0"
 author        = "Jaremy Creechley"
 description   = "Nim helper for using C Macros"
 license       = "MIT"
 srcDir        = "src"
 
-
 # Dependencies
-
 requires "nim >= 1.6.6"
 requires "macroutils >= 1.2.0"
 requires "mddoc >= 0.0.4"

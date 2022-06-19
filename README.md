@@ -1,8 +1,69 @@
+# C.D.E.C.L.: Commonly Desired Edge Case Library
 
-# CDecl: Easy wrapper generation for C/C++ declaration macros
+Small library for macros to handle various edge cases for Nim syntax. These are mostly edge case syntax handlers or tricky C Macro interfacings. The goal is to implement them as generically and well unit tested as possible.
+
+Originally it was just for a C-Declaration marco but luckily the name CDecl lends itself to the above acronym.
+
+Current macros includes: 
+
+- `cdeclmacros`: using C macros that declare variables
+- `unpackObjectArgs`: macro to "splat" an object to keyword arguments
+- `processLabel`: turn "labels" to named arguments
+
+## Macros
+
+### `unpackObjectArgs`
+
+Helper to apply all fields of an object as named paramters. 
 
 ```nim
-import cdecl
+type AddObj = object
+  a*: int
+  b*: int
+
+proc add(a, b: int): int =
+    result = a + b
+  
+let args = AddObj(a: 1, b: 2)
+let res = unpackObjectArgs(add, args)
+assert res == 3
+```
+
+### `unpackLabelsAsArgs`
+
+Helper to transform `labels` as named arguments to a function. Labels are regular Nim syntax but are used as parameter names. 
+
+```nim
+proc foo(name: string = "buzz", a, b: int) =
+  echo name, ":", " a: ", $a, " b: ", $b
+
+template Foo(blk: varargs[untyped]) =
+  ## create a new template to act YAML like API
+  unpackLabelsAsArgs(foo, blk)
+
+Foo:
+  name: "buzz"
+  a: 11
+  b: 22
+
+```
+
+Will call `foo(name="buzz",a=11,b=22)` and print:
+
+```sh
+buzz: a: 11 b: 22
+```
+
+### `cdeclmacro`
+
+Macro helper for wrapping a C macro that declares a new C variable.
+
+It handles emitting the appropriate C code for calling the macro. Additionally it defines a new Nim variable using importc which imports the declared variable. 
+
+#### Basic Example
+
+```nim
+import cdecl/cdecls
 import cdecl/cdeclapi
 export cdeclapi # this is needed clients to use the declared apis
 
@@ -12,78 +73,15 @@ proc CDefineVar*(name: CToken, size: static[int]) {.
 CMacroDeclare(myVar, 128, someExternalCVariable) # creates myVar
 ```
 
-## **macro** cdeclmacro
-
-Macro helper for wrapping a C macro that declares a new C variable.
-
-It handles emitting the appropriate C code for calling the macro. Additionally it defines a new Nim variable using importc which imports the declared variable. 
-
 ```nim
 macro cdeclmacro(name: string; def: untyped)
 ```
  
-## cdeclmacro docs
-
-Macro helper for wrapping a C macro that declares 
-a new C variable.
-
-It handles emitting the appropriate
-C code for calling the macro. 
-
-It can define Nim variables using importc to wrap the
-generated variable. This is done using `varName: CToken` in 
-the argument list and adding a `cdeclsVar(varName -> varType)`
-pragma. The `cdeclsVar` tells the macro which CToken argument
-to use and its type.
-
-The macro will pass any extra pragmas to the
-variable. If the `global` pragma is passed in
-the emitted C code will be put in the 
-`/*VARSECTION*/` section. 
-
-
-## Example
-
-Basic Usage:
+#### CRawStr Example 
 
 ```nim
 import macros
 import cdecl 
-
-{.emit: """/*TYPESECTION*/
-    /* define example C Macro for testing */
-    #define C_DEFINE_VAR(NM, SZ) int NM[SZ]
-    """.}
-
-# Wrap a C Macro that stakes an C macro label and a size to create a new array variable
-proc CDefineVar*(name: CToken, size: static[int]): array[size, int] {.
-  cdeclmacro: "C_DEFINE_VAR", global.}
-
-# Then it's possible to invoke CDefineVar to call the C macro and
-# generate a variable:
-const cVarSz = 4
-CDefineVar(myVar, cVarSz)
-
-static:
-  discard """`CDefineVar` generates code that looks like:"""
-  discard quote do:
-    template CDefineVar*(name: untyped, size: static[int]) =
-      var name* {.inject, importc, nodecl.}: array[size, int]
-    {.emit: "/*VARSECTION*/\nC_DEFINE_VAR($1, $2); " % [ symbolName(name), $size, ] .}
-```
-
-## Example CRawStr
-
-```nim
-import macros
-import cdecl 
-
-{.emit: """/*TYPESECTION*/
-/* define example C Macro for testing */
-#define C_DEFINE_VAR_ADDITION(NM, SZ, N2) \
-  int32_t NM[SZ]; \
-  NM[0] = N2
-""".}
 
 proc CDefineVarStackRaw*(name: CToken, size: static[int], otherRaw: CRawStr): array[size, int32] {.
   cdeclmacro: "C_DEFINE_VAR_ADDITION".}
@@ -94,6 +92,3 @@ proc runCDefineVarStackRaw() =
   assert myVarStackRaw[0] == 42
 ```
 
-## TODO
-
-I plan to add more macros as needed and am welcome to PRs. I'm also interested in issues for use cases that fall withing the general theme of invoking C/C++ macros from Nim.

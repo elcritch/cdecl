@@ -99,7 +99,7 @@ macro unpackLabelsAsArgs*(
     callee: typed;
     args: varargs[untyped]
 ): untyped =
-  ## unpacks labels
+  ## unpacks labels as named arguments. 
   runnableExamples:
     proc foo(name: string = "buzz", a, b: int) =
       echo name, ":", " a: ", $a, " b: ", $b

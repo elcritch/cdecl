@@ -8,7 +8,7 @@
 import unittest
 import strutils, strformat, sequtils
 
-import cdecl
+import cdecl/cdecls
 
 type
   c_var_t[N] = array[N, int]
