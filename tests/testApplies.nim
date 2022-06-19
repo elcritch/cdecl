@@ -150,9 +150,9 @@ suite "unpack labels":
     totalValue = 11 + 22
 
   test "test with special case non-empty proc":
-    template fizzCall(blk: varargs[untyped]) =
-      unpackLabelsAsArgs(fizz, blk)
-    fizzCall:
+    template bazzCall(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(bazz, blk)
+    bazzCall:
       name do (i: int) -> string:
         echo "running func..."
         "bazz" & $i
