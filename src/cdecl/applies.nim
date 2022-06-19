@@ -1,4 +1,4 @@
-import macros, tables, strformat, strutils
+import macros, tables, strformat, strutils, sequtils
 
 macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
   ## Calls `callee` with fields form object `args` unpacked as individual arguments.
@@ -67,15 +67,14 @@ proc processLabel(
     varList[fparam.idx] = (fparam.name, pstmt)
   elif fparam.typ.kind == nnkProcTy:
     if fparam.typ[0].len() > 1:
+      ## print error in corner case of anonymous proc with args
       let fsyntax = fparam.typ[0].repr.replace("):",") ->")
       var msg = &"label `{lname}` is an anonymous proc that"
       msg &= &" takes one or more arguments."
-      msg &= &" Please use the do syntax: \n"
+      msg &= &" Please use the do call syntax: \n"
       msg &= &"\t{lname} do {fsyntax} "
       error(msg)
 
-    echo "fparam.type: ", fparam.typ[0].len()
-    echo "fparam.type: ", fparam.typ.treeRepr
     var pstmt = quote do:
       let fn: proc (): string =
         proc (): string =
@@ -129,6 +128,7 @@ macro unpackLabelsAsArgs*(
   args.expectKind nnkArgList
   let fnImpl = getImpl(callee)
   let fnParams = fnImpl.params().paramNames()
+  let fnIdxParams = fnParams.pairs().toSeq()
 
   ## parse out params in various formats
   var varList: OrderedTable[int, (string, NimNode)]
@@ -155,10 +155,15 @@ macro unpackLabelsAsArgs*(
   assert varList.hasKey(-1) == false ## not possible
 
   # generate actual function call
+  # for v in fnIdxParams:
+  #   echo "fnIdxParams: v: ", v.repr 
+
   result = newCall(callee)
   for idx, (nm, vl) in varList.pairs():
+    let fname = fnIdxParams[idx][0]
+    # echo "fname: ", fname
     if nm == "":
-      result.add vl
+      result.add nnkExprEqExpr.newTree(ident fname, vl)
     else:
       result.add nnkExprEqExpr.newTree(ident nm, vl)
 

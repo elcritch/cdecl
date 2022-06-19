@@ -30,7 +30,7 @@ suite "unpack labels":
     var wasRun = false
     var totalValue = 0
     proc foo(name: string = "buzz", a, b: int) =
-      echo name, ":", " a: ", $a, " b: ", $b
+      # echo name, ":", " a: ", $a, " b: ", $b
       wasRun = true
       totalValue = a + b
     
@@ -38,7 +38,7 @@ suite "unpack labels":
       unpackLabelsAsArgs(foo, blk)
 
     proc fizz(name: proc (): string, a, b: int) =
-      echo name(), ":", " a: ", $a, " b: ", $b
+      # echo name(), ":", " a: ", $a, " b: ", $b
       check name() == "fizzy"
       wasRun = true
       totalValue = a + b
@@ -46,6 +46,13 @@ suite "unpack labels":
     proc bazz(name: proc (i: int): string, a, b: int) =
       echo name(a), ":", " a: ", $a, " b: ", $b
       check name(a) == "bazz" & $a
+      wasRun = true
+      totalValue = a + b
+    
+    let defProc = proc (): string = "barrs"
+    proc barrs(name = defProc, a = 11, b = 22) =
+      echo name(), ":", " a: ", $a, " b: ", $b
+      check name() == "barrs"
       wasRun = true
       totalValue = a + b
     
@@ -103,13 +110,35 @@ suite "unpack labels":
       a: 11
       b: 22
 
+  test "test with def arguments a":
+    template Barrs(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(barrs, blk)
+    
+    Barrs(name = proc(): string = "barrs"):
+      b: 22
+
+  test "test with def arguments b":
+    template Barrs(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(barrs, blk)
+    
+    Barrs(name = proc(): string = "barrs"):
+      a: 11
+
+  test "test with def arguments name ":
+    template Barrs(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(barrs, blk)
+    
+    Barrs:
+      a: 11
+      b: 22
+
   test "test with special case empty proc":
     template fizzCall(blk: varargs[untyped]) =
       unpackLabelsAsArgs(fizz, blk)
     
     fizzCall:
       name:
-        echo "running func..."
+        # echo "running func..."
         "fizzy"
       a: 11
       b: 22
@@ -129,7 +158,7 @@ suite "unpack labels":
       unpackLabelsAsArgs(fizz, blk)
     fizzCall:
       name do () -> string:
-        echo "running func..."
+        # echo "running func..."
         "fizzy"
       a: 11
       b: 22
@@ -141,7 +170,7 @@ suite "unpack labels":
       compiles(block:
         bazzCall:
           name:
-            echo "running func..."
+            # echo "running func..."
             "fizzy"
           a: 11
           b: 22)
@@ -154,7 +183,7 @@ suite "unpack labels":
       unpackLabelsAsArgs(bazz, blk)
     bazzCall:
       name do (i: int) -> string:
-        echo "running func..."
+        # echo "running func..."
         "bazz" & $i
       a: 11
       b: 22
