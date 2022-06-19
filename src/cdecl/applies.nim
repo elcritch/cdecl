@@ -1,4 +1,4 @@
-import macros, tables
+import macros, tables, strformat, strutils
 
 macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
   ## Calls `callee` with fields form object `args` unpacked as individual arguments.
@@ -66,6 +66,16 @@ proc processLabel(
         fn
     varList[fparam.idx] = (fparam.name, pstmt)
   elif fparam.typ.kind == nnkProcTy:
+    if fparam.typ[0].len() > 1:
+      let fsyntax = fparam.typ[0].repr.replace("):",") ->")
+      var msg = &"label `{lname}` is an anonymous proc that"
+      msg &= &" takes one or more arguments."
+      msg &= &" Please use the do syntax: \n"
+      msg &= &"\t{lname} do {fsyntax} "
+      error(msg)
+
+    echo "fparam.type: ", fparam.typ[0].len()
+    echo "fparam.type: ", fparam.typ.treeRepr
     var pstmt = quote do:
       let fn: proc (): string =
         proc (): string =

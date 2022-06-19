@@ -43,6 +43,12 @@ suite "unpack labels":
       wasRun = true
       totalValue = a + b
     
+    proc bazz(name: proc (i: int): string, a, b: int) =
+      echo name(a), ":", " a: ", $a, " b: ", $b
+      check name(a) == "bazz" & $a
+      wasRun = true
+      totalValue = a + b
+    
   teardown:
     check wasRun
     check totalValue == (11+22)
@@ -127,3 +133,18 @@ suite "unpack labels":
         "fizzy"
       a: 11
       b: 22
+
+  test "test with anonymous proc with args":
+    template bazzCall(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(bazz, blk)
+    const works =
+      compiles(block:
+        bazzCall:
+          name:
+            echo "running func..."
+            "fizzy"
+          a: 11
+          b: 22)
+    check not works
+    wasRun = true
+    totalValue = 11 + 22
