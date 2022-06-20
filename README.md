@@ -31,7 +31,7 @@ assert res == 3
 
 ### `unpackLabelsAsArgs`
 
-Helper to transform `labels` as named arguments to a function. Labels are regular Nim syntax but are used as parameter names. 
+Helper to transform `labels` as named arguments to a function. *Labels* are regular Nim syntax for calling procs but are transformed to parameter names:
 
 ```nim
 proc foo(name: string = "buzz", a, b: int) =
