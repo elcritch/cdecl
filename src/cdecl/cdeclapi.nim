@@ -3,10 +3,10 @@ import macros
 type
   CRawStr* = distinct string ##\
     ## Represents a raw string that gets interpolated into generated C ouput
+  CLabel* = CRawStr ##\
+    ## used to represent a C macro "label", an alias for CRawStr
   CToken* = distinct static[CRawStr] ##\
-    ## Represents a C token that can be anything passed to a C macro 
-  CInvoked* = distinct object ##\
-    ## Represents a C expression
+    ## Represents a C token derived from a Nim expression
 
 macro symbolName*(x: untyped): string =
   ## Get a string representation of a Nim symbol

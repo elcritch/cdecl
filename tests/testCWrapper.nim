@@ -14,9 +14,10 @@ int myVar = 0;
 
 """.}
 
-proc CVarName*(prefix: CToken, name: CToken): CRawStr {.cmacrowrapper: "C_VAR_NAME".}
+proc CVarName*(prefix: CToken, name: CToken): CLabel {.
+  cmacrowrapper: "C_VAR_NAME".}
 
-proc CVar*(varname: CRawStr): cint {.cmacrocall: "C_VAR".}
+proc CVar(varname: CLabel): cint {.cmacrowrapper: "C_VAR".}
 
 proc staticEcho*(val: CToken) =
   static:
@@ -31,12 +32,11 @@ test "test c macro wrapper":
 import macros
 
 test "test c macro call":
+  ## some C Variable
   var myVarC {.importc: "myVar".}: cint
   myVarC = 42
+  ## we use a C Macro to create a C variable "label"
   const myvar = CVarName(my, Var)
-  var someVar: cint
-  expandMacros:
-    someVar = CVar(myvar)
-    echo "someVar: ", $someVar
+  var someVar = CVar(myvar)
+  echo "someVar: ", $someVar
   check someVar == 42
-

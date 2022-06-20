@@ -21,6 +21,9 @@ proc getFtmArgs(varNameStr: string, args: var seq[NimNode]): NimNode =
     elif arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CRawStr"):
       arg.typ= ident "CRawStr"
       cFmtArgs.add Call("symbolVal", arg.mname)
+    elif arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CLabel"):
+      arg.typ= ident "CLabel"
+      cFmtArgs.add Call("symbolVal", arg.mname)
     elif arg.kind == nnkIdentDefs:
       if arg[1].kind != nnkBracketExpr:
         error("arguments to `CDefineVar` must be wrapped in static[T]. Perhaps try `static[$1]`" % [ arg[0].repr ] )
@@ -101,12 +104,10 @@ macro cdeclmacro*(name: string, def: untyped) =
     
 
   let varNameStr = name.strVal 
-  let varName = ident(name.strVal) 
   let procName = macroutils.name(def)
   var params = macroutils.params(def)
   let retType = params[0]
   let prags = macroutils.pragmas(def)
-  let generics = macroutils.generics(def)
   var args = params[1..^1]
 
   if retType.kind != nnkEmpty:
@@ -167,41 +168,19 @@ macro cmacrowrapper*(name: string, def: untyped) =
   cFmtStr &= toSeq(0..<args.len()).mapIt("$" & $(it+2)).join(", ")
   cFmtStr &= ")"
   let cFmtLit = newLit(cFmtStr)
-  let n1 = args[0].mname
 
   var cFmtArgs = getFtmArgs(varNameStr, args)
-
-  result = quote do:
-    template `procName`() =
-      CRawStr(`cFmtLit` % `cFmtArgs`)
-  
+  let retName: string = retType.repr
+  if retName.eqIdent("CLabel") or retName.eqIdent("CRawStr"): 
+    result = quote do:
+      template `procName`() =
+        CRawStr(`cFmtLit` % `cFmtArgs`)
+  else:
+    result = quote do:
+      template `procName`() =
+        var mi2 {.importc: `cFmtLit` % `cFmtArgs`, global, nodecl, noinit.}: `retType`
+        mi2
+    
   result.params= FormalParams(retType, args)
-
-  echo "ctokenmacro: ", result.repr()
-
-macro cmacrocall*(name: string, def: untyped) =
-  ## pragma for c macro call wrapping
-  
-  let varNameStr = name.strVal 
-  let procName = macroutils.name(def)
-  var params = macroutils.params(def)
-  let retType = params[0]
-  var args = params[1..^1]
-
-  echo "cmacrocall: args: ", args.repr
-
-  var cFmtStr = ""
-  cFmtStr &= "$1("
-  cFmtStr &= toSeq(0..<args.len()).mapIt("$" & $(it+2)).join(", ")
-  cFmtStr &= ")"
-  let cFmtLit = newLit(cFmtStr)
-
-  var cFmtArgs = getFtmArgs(varNameStr, args)
-  result = quote do:
-    template `procName`() =
-      var mi2 {.importc: `cFmtLit` % `cFmtArgs`, global, nodecl, noinit.}: `retType`
-      mi2
-
-
-  result.params= FormalParams(retType, args)
-  echo "cmacrocall: ", result.repr()
+  echo "result: ", result.repr
+  echo "result: ", result.treeRepr
