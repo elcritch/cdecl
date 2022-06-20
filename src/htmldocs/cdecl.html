@@ -105,17 +105,6 @@ window.addEventListener('DOMContentLoaded', main);
   </ul>
 </li>
 <li>
-  <a class="reference reference-toplevel" href="#17" id="67">Macros</a>
-  <ul class="simple simple-toc-section">
-      <ul class="simple nested-toc-section">cdeclmacro
-      <li><a class="reference" href="#cdeclmacro.m%2Cstring%2Cuntyped"
-    title="cdeclmacro(name: string; def: untyped)">cdeclmacro(name: string; def: untyped)</a></li>
-
-  </ul>
-
-  </ul>
-</li>
-<li>
   <a class="reference reference-toplevel" href="#19" id="69">Exports</a>
   <ul class="simple simple-toc-section">
     
@@ -133,71 +122,12 @@ window.addEventListener('DOMContentLoaded', main);
   <div class="section" id="6">
 <h1><a class="toc-backref" href="#6">Imports</a></h1>
 <dl class="item">
-<a class="reference external" href="cdeclapi.html">cdeclapi</a>
-</dl></div>
-<div class="section" id="17">
-<h1><a class="toc-backref" href="#17">Macros</a></h1>
-<dl class="item">
-<div id="cdeclmacro.m,string,untyped">
-<dt><pre><span class="Keyword">macro</span> <a href="#cdeclmacro.m%2Cstring%2Cuntyped"><span class="Identifier">cdeclmacro</span></a><span class="Other">(</span><span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">def</span><span class="Other">:</span> <span class="Identifier">untyped</span><span class="Other">)</span></pre></dt>
-<dd>
-
-<p>Macro helper for wrapping a C macro that declares a new C variable.</p>
-<p>It handles emitting the appropriate C code for calling the macro.</p>
-<p>It can define Nim variables using importc to wrap the generated variable. This is done using <tt class="docutils literal"><span class="pre"><span class="Identifier">varName</span><span class="Punctuation">:</span> <span class="Identifier">CToken</span></span></tt> in the argument list and adding a <tt class="docutils literal"><span class="pre"><span class="Identifier">cdeclsVar</span><span class="Punctuation">(</span><span class="Identifier">varName</span> <span class="Operator">-&gt;</span> <span class="Identifier">varType</span><span class="Punctuation">)</span></span></tt> pragma. The <tt class="docutils literal"><span class="pre"><span class="Identifier">cdeclsVar</span></span></tt> tells the macro which CToken argument to use and its type.</p>
-<p>The macro will pass any extra pragmas to the variable. If the <tt class="docutils literal"><span class="pre"><span class="Identifier">global</span></span></tt> pragma is passed in the emitted C code will be put in the <tt class="docutils literal"><span class="pre"><span class="Operator">/*</span><span class="Identifier">VARSECTION</span><span class="Operator">*/</span></span></tt> section. </p>
-
-<p><strong class="examples_text">Example:</strong></p>
-<pre class="listing"><span class="Keyword">import</span> <span class="Identifier">macros</span>
-<span class="Keyword">import</span> <span class="Identifier">cdecl</span> 
-
-<span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">emit</span><span class="Punctuation">:</span> <span class="LongStringLit">&quot;&quot;&quot;/*TYPESECTION*/
-    /* define example C Macro for testing */
-    #define C_DEFINE_VAR(NM, SZ) int NM[SZ]
-    #define C_DEFINE_VAR_DUO(NM, SZ, NM2) int NM[SZ]
-    &quot;&quot;&quot;</span><span class="Operator">.</span><span class="Punctuation">}</span>
-
-<span class="Keyword">proc</span> <span class="Identifier">CDefineVar</span><span class="Operator">*</span><span class="Punctuation">(</span><span class="Identifier">name</span><span class="Punctuation">:</span> <span class="Identifier">CToken</span><span class="Punctuation">,</span> <span class="Identifier">size</span><span class="Punctuation">:</span> <span class="Keyword">static</span><span class="Punctuation">[</span><span class="Identifier">int</span><span class="Punctuation">]</span><span class="Punctuation">)</span> <span class="Punctuation">{</span><span class="Operator">.</span>
-  <span class="Identifier">cdeclmacro</span><span class="Punctuation">:</span> <span class="StringLit">&quot;C_DEFINE_VAR&quot;</span><span class="Punctuation">,</span> <span class="Identifier">cdeclsVar</span><span class="Punctuation">(</span><span class="Identifier">name</span> <span class="Operator">-&gt;</span> <span class="Identifier">array</span><span class="Punctuation">[</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Identifier">int32</span><span class="Punctuation">]</span><span class="Punctuation">)</span><span class="Operator">.</span><span class="Punctuation">}</span>
-
-<span class="Comment"># Then it's possible to invoke CDefineVar to call the C macro and</span>
-<span class="Comment"># generate a variable:</span>
-<span class="Keyword">const</span> <span class="Identifier">cVarSz</span> <span class="Operator">=</span> <span class="DecNumber">4</span>
-<span class="Identifier">CDefineVar</span><span class="Punctuation">(</span><span class="Identifier">myVar</span><span class="Punctuation">,</span> <span class="Identifier">cVarSz</span><span class="Punctuation">)</span>
-
-<span class="Keyword">static</span><span class="Punctuation">:</span>
-  <span class="Keyword">discard</span> <span class="LongStringLit">&quot;&quot;&quot;`CDefineVar` generates code that looks like:&quot;&quot;&quot;</span>
-  <span class="Keyword">discard</span> <span class="Identifier">quote</span> <span class="Keyword">do</span><span class="Punctuation">:</span>
-    <span class="Keyword">template</span> <span class="Identifier">CDefineVar</span><span class="Operator">*</span><span class="Punctuation">(</span><span class="Identifier">name</span><span class="Punctuation">:</span> <span class="Identifier">untyped</span><span class="Punctuation">,</span> <span class="Identifier">size</span><span class="Punctuation">:</span> <span class="Keyword">static</span><span class="Punctuation">[</span><span class="Identifier">int</span><span class="Punctuation">]</span><span class="Punctuation">)</span> <span class="Operator">=</span>
-      <span class="Keyword">var</span> <span class="Identifier">name</span><span class="Operator">*</span> <span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">inject</span><span class="Punctuation">,</span> <span class="Identifier">importc</span><span class="Punctuation">,</span> <span class="Identifier">nodecl</span><span class="Operator">.</span><span class="Punctuation">}</span><span class="Punctuation">:</span> <span class="Identifier">array</span><span class="Punctuation">[</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Identifier">int</span><span class="Punctuation">]</span>
-    <span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">emit</span><span class="Punctuation">:</span> <span class="StringLit">&quot;/*VARSECTION*/</span><span class="EscapeSequence">\n</span><span class="StringLit">C_DEFINE_VAR($1, $2); &quot;</span> <span class="Operator">%</span> <span class="Punctuation">[</span> <span class="Identifier">symbolName</span><span class="Punctuation">(</span><span class="Identifier">name</span><span class="Punctuation">)</span><span class="Punctuation">,</span> <span class="Operator">$</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Punctuation">]</span> <span class="Operator">.</span><span class="Punctuation">}</span></pre>
-<p><strong class="examples_text">Example:</strong></p>
-<pre class="listing"><span class="Keyword">import</span> <span class="Identifier">macros</span>
-<span class="Keyword">import</span> <span class="Identifier">cdecl</span> 
-
-<span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">emit</span><span class="Punctuation">:</span> <span class="LongStringLit">&quot;&quot;&quot;/*TYPESECTION*/
-    /* define example C Macro for testing */
-    #define C_DEFINE_VAR_ADDITION(NM, SZ, N2) \
-      int32_t NM[SZ]; \
-      NM[0] = N2
-    &quot;&quot;&quot;</span><span class="Operator">.</span><span class="Punctuation">}</span>
-
-<span class="Keyword">proc</span> <span class="Identifier">CDefineVarStackRaw</span><span class="Operator">*</span><span class="Punctuation">(</span><span class="Identifier">name</span><span class="Punctuation">:</span> <span class="Identifier">CToken</span><span class="Punctuation">,</span> <span class="Identifier">size</span><span class="Punctuation">:</span> <span class="Keyword">static</span><span class="Punctuation">[</span><span class="Identifier">int</span><span class="Punctuation">]</span><span class="Punctuation">,</span> <span class="Identifier">otherRaw</span><span class="Punctuation">:</span> <span class="Identifier">CRawStr</span><span class="Punctuation">)</span> <span class="Punctuation">{</span><span class="Operator">.</span>
-  <span class="Identifier">cdeclmacro</span><span class="Punctuation">:</span> <span class="StringLit">&quot;C_DEFINE_VAR_ADDITION&quot;</span><span class="Punctuation">,</span> <span class="Identifier">cdeclsVar</span><span class="Punctuation">(</span><span class="Identifier">name</span> <span class="Operator">-&gt;</span> <span class="Identifier">array</span><span class="Punctuation">[</span><span class="Identifier">size</span><span class="Punctuation">,</span> <span class="Identifier">int32</span><span class="Punctuation">]</span><span class="Punctuation">)</span><span class="Operator">.</span><span class="Punctuation">}</span>
-
-<span class="Comment"># Pass a raw string to the C macro:</span>
-<span class="Keyword">proc</span> <span class="Identifier">runCDefineVarStackRaw</span><span class="Punctuation">(</span><span class="Punctuation">)</span> <span class="Operator">=</span>
-  <span class="Identifier">CDefineVarStackRaw</span><span class="Punctuation">(</span><span class="Identifier">myVarStackRaw</span><span class="Punctuation">,</span> <span class="DecNumber">5</span><span class="Punctuation">,</span> <span class="Identifier">CRawStr</span><span class="Punctuation">(</span><span class="StringLit">&quot;40+2&quot;</span><span class="Punctuation">)</span><span class="Punctuation">)</span>
-  <span class="Identifier">assert</span> <span class="Identifier">myVarStackRaw</span><span class="Punctuation">[</span><span class="DecNumber">0</span><span class="Punctuation">]</span> <span class="Operator">==</span> <span class="DecNumber">42</span></pre>
-
-</dd>
-</div>
-
+<a class="reference external" href="cdecls.html">cdecls</a>, <a class="reference external" href="cdeclapi.html">cdeclapi</a>, <a class="reference external" href="applies.html">applies</a>
 </dl></div>
 <div class="section" id="19">
 <h1><a class="toc-backref" href="#19">Exports</a></h1>
 <dl class="item">
-<a href="cdeclapi.html#symbolName.m,untyped"><span class="Identifier">symbolName</span></a>, <a href="cdeclapi.html#CRawStr"><span class="Identifier">CRawStr</span></a>, <a href="cdeclapi.html#CToken"><span class="Identifier">CToken</span></a>, <a href="cdeclapi.html#symbolVal.t,CRawStr"><span class="Identifier">symbolVal</span></a>
+<a href="cdeclapi.html#symbolName.m,untyped"><span class="Identifier">symbolName</span></a>, <a href="cdeclapi.html#symbolVal.t,CRawStr"><span class="Identifier">symbolVal</span></a>, <a href="cdeclapi.html#CRawStr"><span class="Identifier">CRawStr</span></a>, <a href="cdeclapi.html#CToken"><span class="Identifier">CToken</span></a>, <a href="cdecls.html#cdeclmacro.m,string,untyped"><span class="Identifier">cdeclmacro</span></a>, <a href="cdeclapi.html#symbolName.m,untyped_2"><span class="Identifier">symbolName</span></a>, <a href="cdeclapi.html#CRawStr_2"><span class="Identifier">CRawStr</span></a>, <a href="cdeclapi.html#CToken_2"><span class="Identifier">CToken</span></a>, <a href="cdeclapi.html#symbolVal.t,CRawStr_2"><span class="Identifier">symbolVal</span></a>, <a href="applies.html#unpackLabelsAsArgs.m,typed,varargs[untyped]"><span class="Identifier">unpackLabelsAsArgs</span></a>, <a href="applies.html#unpackObjectArgs.m,untyped,typed,varargs[untyped]"><span class="Identifier">unpackObjectArgs</span></a>, <a href="applies.html#Param"><span class="Identifier">Param</span></a>, <a href="applies.html#unpackObjectArgFields.m,untyped,typed,varargs[untyped]"><span class="Identifier">unpackObjectArgFields</span></a>
 </dl></div>
 
   </div>
@@ -207,7 +137,7 @@ window.addEventListener('DOMContentLoaded', main);
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-17 05:23:29 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-20 00:16:12 UTC</small>
       </div>
     </div>
   </div>

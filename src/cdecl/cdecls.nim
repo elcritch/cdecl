@@ -7,7 +7,7 @@ import strformat, strutils, sequtils
 
 import macroutils
 
-import cdecl/cdeclapi
+import cdeclapi
 export cdeclapi
 
 template mname(node: NimNode) = macroutils.name(node)
