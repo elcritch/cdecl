@@ -21,6 +21,26 @@ macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): 
   for extra in extras:
     result.add extra
 
+macro unpackObjectArgFields*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
+  ## Similar to `unpackObjectArgs` but with named parameters based on field names.
+  ## 
+  
+  runnableExamples:
+    proc divide(b, a: int): int =
+      result = b div a
+    let args = AddObj(a: 1, b: 0)
+    let res = unpackObjectArgFields(divide, args)
+    check res == 0
+  
+  let paramNames = arg.getType()[2]
+  result = newCall(callee)
+  for nm in paramNames:
+    let p = quote do:
+      `arg`.`nm`
+    result.add nnkExprEqExpr.newTree(nm, p)
+  for extra in extras:
+    result.add extra
+
 type
   Param* = object
     idx*: int

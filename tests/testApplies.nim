@@ -3,7 +3,7 @@ import cdecl/applies
 
 {.push hint[XDeclaredButNotUsed](off).}
 
-suite "unpack object args":
+suite "unpack object as position args":
   type AddObj = object
     a*: int
     b*: int
@@ -24,6 +24,28 @@ suite "unpack object args":
     let args = AddObj(a: 1, b: 2)
     let res = unpackObjectArgs(addDouble, args, true)
     check res == 6
+
+suite "unpack object fields as args":
+  type DivObj = object
+    a*: int
+    b*: int
+  
+  test "test unpackObjectArgs":
+    proc divide(b, a: int): int =
+      result = b div a
+    
+    let args = DivObj(a: 1, b: 0)
+    let res = unpackObjectArgFields(divide, args)
+    check res == 0
+
+  test "test unpackObjectArgs with defaults":
+    proc divide(c = 10, b, a: int): int =
+      result = b div (a + c)
+    
+    let args = DivObj(a: 1, b: 11)
+    let res = unpackObjectArgFields(divide, args)
+    check res == 1
+
 
 suite "unpack labels":
   setup:
