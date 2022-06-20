@@ -7,8 +7,11 @@ Originally it was just for a C-Declaration marco but luckily the name CDecl lend
 Current macros includes: 
 
 - `cdeclmacros`: using C macros that declare variables
-- `unpackObjectArgs`: macro to "splat" an object to keyword arguments
+- `unpackObjectArgs`: macro to "splat" an object to position arguments
+- `unpackObjectArgFields`: macro to "splat" an object to keyword arguments
 - `unpackLabelsAsArgs`: turn "labels" to named arguments
+
+You can see various usages in the [tests ](https://github.com/elcritch/cdecl/tree/main/tests) folder. 
 
 ## Macros
 
