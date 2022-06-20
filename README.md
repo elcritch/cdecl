@@ -8,7 +8,7 @@ Current macros includes:
 
 - `cdeclmacros`: using C macros that declare variables
 - `unpackObjectArgs`: macro to "splat" an object to keyword arguments
-- `processLabel`: turn "labels" to named arguments
+- `unpackLabelsAsArgs`: turn "labels" to named arguments
 
 ## Macros
 
