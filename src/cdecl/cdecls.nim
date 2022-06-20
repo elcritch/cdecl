@@ -53,7 +53,8 @@ macro cdeclmacro*(name: string, def: untyped) =
       discard quote do:
         template CDefineVar*(name: untyped, size: static[int]) =
           var name* {.inject, importc, nodecl.}: array[size, int]
-        {.emit: "/*VARSECTION*/\nC_DEFINE_VAR($1, $2); " % [ symbolName(name), $size, ] .}
+        {.emit: "/*VARSECTION*/\nC_DEFINE_VAR($1, $2); " % [
+            symbolName(name), $size, ] .}
 
   runnableExamples:
     import macros
