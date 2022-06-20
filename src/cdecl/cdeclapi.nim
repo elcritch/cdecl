@@ -20,4 +20,4 @@ template symbolVal*(x: CRawStr): string =
 
 template symbolVal*(x: string): string =
   ## Turns a CRawStr into a normal string
-  x.string
+  x
