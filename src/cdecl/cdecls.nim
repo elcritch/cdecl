@@ -154,16 +154,12 @@ macro cdeclmacro*(name: string, def: untyped) =
 
 
 macro cmacrowrapper*(name: string, def: untyped) =
-  ## c wrapper
-  ## 
+  ## pragma for making a c macro wrapper 
   
   let varNameStr = name.strVal 
-  let varName = ident(name.strVal) 
   let procName = macroutils.name(def)
   var params = macroutils.params(def)
   let retType = params[0]
-  let prags = macroutils.pragmas(def)
-  let generics = macroutils.generics(def)
   var args = params[1..^1]
 
   var cFmtStr = ""
@@ -182,3 +178,30 @@ macro cmacrowrapper*(name: string, def: untyped) =
   result.params= FormalParams(retType, args)
 
   echo "ctokenmacro: ", result.repr()
+
+macro cmacrocall*(name: string, def: untyped) =
+  ## pragma for c macro call wrapping
+  
+  let varNameStr = name.strVal 
+  let procName = macroutils.name(def)
+  var params = macroutils.params(def)
+  let retType = params[0]
+  var args = params[1..^1]
+
+  echo "cmacrocall: args: ", args.repr
+
+  var cFmtStr = ""
+  cFmtStr &= "$1("
+  cFmtStr &= toSeq(0..<args.len()).mapIt("$" & $(it+2)).join(", ")
+  cFmtStr &= ")"
+  let cFmtLit = newLit(cFmtStr)
+
+  var cFmtArgs = getFtmArgs(varNameStr, args)
+  result = quote do:
+    template `procName`() =
+      var mi2 {.importc: `cFmtLit` % `cFmtArgs`, global, nodecl, noinit.}: `retType`
+      mi2
+
+
+  result.params= FormalParams(retType, args)
+  echo "cmacrocall: ", result.repr()

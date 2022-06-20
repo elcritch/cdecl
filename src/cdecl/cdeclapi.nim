@@ -5,6 +5,8 @@ type
     ## Represents a raw string that gets interpolated into generated C ouput
   CToken* = distinct static[CRawStr] ##\
     ## Represents a C token that can be anything passed to a C macro 
+  CInvoked* = distinct object ##\
+    ## Represents a C expression
 
 macro symbolName*(x: untyped): string =
   ## Get a string representation of a Nim symbol
