@@ -12,6 +12,30 @@ export cdeclapi
 
 template mname(node: NimNode) = macroutils.name(node)
 
+proc getFtmArgs(varNameStr: string, args: var seq[NimNode]): NimNode =
+  var cFmtArgs = Bracket(varNameStr)
+  for arg in args.mitems:
+    if arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CToken"):
+      arg.typ= ident "untyped"
+      cFmtArgs.add Call("symbolName", arg.mname)
+    elif arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CRawStr"):
+      arg.typ= ident "CRawStr"
+      cFmtArgs.add Call("symbolVal", arg.mname)
+    elif arg.kind == nnkIdentDefs:
+      if arg[1].kind != nnkBracketExpr:
+        error("arguments to `CDefineVar` must be wrapped in static[T]. Perhaps try `static[$1]`" % [ arg[0].repr ] )
+      if arg[1][0].strVal != "static":
+        error("arguments to `CDefineVar` must be wrapped in static[T]. Got: " & arg.repr )
+      
+      if arg[1][1].eqIdent("string"):
+        cFmtArgs.add Call("repr", arg.mname)
+      else:
+        cFmtArgs.add Call("$", arg.mname)
+    else:
+      error("arguments to `CDefineVar` must a type wrapped in `static[T] or be a `CToken`. Instead got: $1." % [repr(arg)]  )
+  result = cFmtArgs
+
+  
 macro cdeclmacro*(name: string, def: untyped) =
   ## Macro helper for wrapping a C macro that declares 
   ## a new C variable.
@@ -100,27 +124,8 @@ macro cdeclmacro*(name: string, def: untyped) =
       let rType = vn[2]
       decls[name] = rType
 
-  var cFmtArgs = Bracket(varNameStr)
-  for arg in args.mitems:
-    if arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CToken"):
-      arg.typ= ident "untyped"
-      cFmtArgs.add Call("symbolName", arg.mname)
-    elif arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CRawStr"):
-      arg.typ= ident "CRawStr"
-      cFmtArgs.add Call("symbolVal", arg.mname)
-    elif arg.kind == nnkIdentDefs:
-      if arg[1].kind != nnkBracketExpr:
-        error("arguments to `CDefineVar` must be wrapped in static[T]. Perhaps try `static[$1]`" % [ arg[0].repr ] )
-      if arg[1][0].strVal != "static":
-        error("arguments to `CDefineVar` must be wrapped in static[T]. Got: " & arg.repr )
-      
-      if arg[1][1].eqIdent("string"):
-        cFmtArgs.add Call("repr", arg.mname)
-      else:
-        cFmtArgs.add Call("$", arg.mname)
-    else:
-      error("arguments to `CDefineVar` must a type wrapped in `static[T] or be a `CToken`. Instead got: $1." % [repr(arg)]  )
-  
+  var cFmtArgs = getFtmArgs(varNameStr, args)
+
   var cFmtStr = ""
   if isGlobal: cFmtStr &= "/*VARSECTION*/\n"
   cFmtStr &= "$1("
@@ -148,3 +153,32 @@ macro cdeclmacro*(name: string, def: untyped) =
   # echo fmt"cmacro: {result.treerepr=}"
 
 
+macro cmacrowrapper*(name: string, def: untyped) =
+  ## c wrapper
+  ## 
+  
+  let varNameStr = name.strVal 
+  let varName = ident(name.strVal) 
+  let procName = macroutils.name(def)
+  var params = macroutils.params(def)
+  let retType = params[0]
+  let prags = macroutils.pragmas(def)
+  let generics = macroutils.generics(def)
+  var args = params[1..^1]
+
+  var cFmtStr = ""
+  cFmtStr &= "$1("
+  cFmtStr &= toSeq(0..<args.len()).mapIt("$" & $(it+2)).join(", ")
+  cFmtStr &= ")"
+  let cFmtLit = newLit(cFmtStr)
+  let n1 = args[0].mname
+
+  var cFmtArgs = getFtmArgs(varNameStr, args)
+
+  result = quote do:
+    template `procName`() =
+      CRawStr(`cFmtLit` % `cFmtArgs`)
+  
+  result.params= FormalParams(retType, args)
+
+  echo "ctokenmacro: ", result.repr()

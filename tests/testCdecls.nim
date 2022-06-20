@@ -84,7 +84,8 @@ proc CDefineVarStackRaw*(name: CToken, size: static[int], otherRaw: CRawStr) {.
   cdeclmacro: "C_DEFINE_VAR_ADDITION", cdeclsVar(name -> array[size, int32]).}
  
 proc runCDefineVarStackRaw() =
-  CDefineVarStackRaw(myVarStackRaw, 5, CRawStr("40+2"))
+  const x = CRawStr("40+2")
+  CDefineVarStackRaw(myVarStackRaw, 5, x)
   let testVal = [42'i32,1,2,3,4]
   myVarStackRaw[1..4] = testVal[1..^1]
   check myVarStackRaw.len() == 5
