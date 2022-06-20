@@ -18,6 +18,9 @@ proc getFtmArgs(varNameStr: string, args: var seq[NimNode]): NimNode =
     if arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CToken"):
       arg.typ= ident "untyped"
       cFmtArgs.add Call("symbolName", arg.mname)
+    elif arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CRawToken"):
+      arg.typ= ident "untyped"
+      cFmtArgs.add Call("symbolVal", arg.mname)
     elif arg.kind == nnkIdentDefs and arg.typ.repr.eqIdent("CRawStr"):
       arg.typ= ident "CRawStr"
       cFmtArgs.add Call("symbolVal", arg.mname)
@@ -182,3 +185,4 @@ macro cmacrowrapper*(name: string, def: untyped) =
         mi2
     
   result.params= FormalParams(retType, args)
+  echo "result: ", result.repr

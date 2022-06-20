@@ -14,8 +14,8 @@ int myVar = 0;
 
 """.}
 
-proc CVarName*(prefix: CToken, name: CToken): CLabel {.
-  cmacrowrapper: "C_VAR_NAME".}
+proc CVarStrName*(prefix: CRawToken, name: CToken): CLabel {.cmacrowrapper: "C_VAR_NAME".}
+proc CVarName*(prefix: CToken, name: CToken): CLabel {.cmacrowrapper: "C_VAR_NAME".}
 
 proc CVar(varname: CLabel): cint {.cmacrowrapper: "C_VAR".}
 
@@ -29,7 +29,13 @@ test "test c macro wrapper":
   check varname.string == "C_VAR_NAME(my, Var)"
   echo "varname: ", varname.string
 
-import macros
+test "test c macro wrapper with mix CToken and CRawToken":
+  ## mixing CRawToken (e.g. static[string) and CToken's
+  ## to help show the differences
+  const varname = CVarStrName("my", Var)
+  staticEcho(varname)
+  check varname.string == "C_VAR_NAME(my, Var)"
+  echo "varname: ", varname.string
 
 test "test c macro call":
   ## some C Variable
