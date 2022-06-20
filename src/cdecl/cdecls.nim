@@ -182,5 +182,3 @@ macro cmacrowrapper*(name: string, def: untyped) =
         mi2
     
   result.params= FormalParams(retType, args)
-  echo "result: ", result.repr
-  echo "result: ", result.treeRepr

@@ -40,3 +40,4 @@ test "test c macro call":
   var someVar = CVar(myvar)
   echo "someVar: ", $someVar
   check someVar == 42
+
