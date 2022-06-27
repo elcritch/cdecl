@@ -62,7 +62,6 @@ macro cdeclmacro*(name: string, def: untyped) =
   ## 
   runnableExamples:
     import macros
-    import cdecl 
 
     {.emit: """/*TYPESECTION*/
     /* define example C Macro for testing */
@@ -88,7 +87,6 @@ macro cdeclmacro*(name: string, def: untyped) =
 
   runnableExamples:
     import macros
-    import cdecl 
 
     {.emit: """/*TYPESECTION*/
     /* define example C Macro for testing */

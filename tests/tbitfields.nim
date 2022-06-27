@@ -1,6 +1,7 @@
 import unittest
 import strutils, strformat
 import print
+import macros
 
 import cdecl/bitfields
 
@@ -26,10 +27,11 @@ bitfields RegConfig(uint8):
   speed: Speed[3..4] # range are re-ordered using min/max
   gain: GainValues[2..0]
 
-bitfields RegChannel(uint16):
-  ## define RegConfig integer with accessors for `bitfields`
-  speed: uint8[4..9] # range are re-ordered using min/max
-  gain: uint8[2..0]
+macros.expandMacros:
+  bitfields RegChannel(uint16):
+    ## define RegConfig integer with accessors for `bitfields`
+    speed: uint8[4..9] # range are re-ordered using min/max
+    gain: uint8[2..0]
 
 bitfields RegChannel2(uint32):
   largeunum: uint8[6..16] # range are re-ordered using min/max

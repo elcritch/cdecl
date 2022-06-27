@@ -7,11 +7,14 @@ macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): 
   ## using the values from an object
   
   runnableExamples:
+    type AddObj = object
+      a*: int
+      b*: int
     proc add(a, b: int): int =
       result = a + b
     let args = AddObj(a: 1, b: 2)
     let res = unpackObjectArgs(add, args)
-    check res == 3
+    assert res == 3
   
   let paramNames = arg.getType()[2]
   result = newCall(callee)
@@ -26,11 +29,14 @@ macro unpackObjectArgFields*(callee: untyped; arg: typed, extras: varargs[untype
   ## 
   
   runnableExamples:
+    type AddObj = object
+      a*: int
+      b*: int
     proc divide(b, a: int): int =
       result = b div a
     let args = AddObj(a: 1, b: 0)
     let res = unpackObjectArgFields(divide, args)
-    check res == 0
+    assert res == 0
   
   let paramNames = arg.getType()[2]
   result = newCall(callee)
@@ -134,14 +140,14 @@ macro unpackLabelsAsArgs*(
   
   runnableExamples:
     proc fizz(name: proc (): string, a, b: int) =
-      echo name, ":", " a: ", $a, " b: ", $b
+      echo name(), ":", " a: ", $a, " b: ", $b
     
     template Fizz(blk: varargs[untyped]) =
-      unpackLabelsAsArgs(foo, blk)
+      unpackLabelsAsArgs(fizz, blk)
     
     let fn = proc (): string = "fizzy"
     Fizz:
-      name: fn
+      name: fn() # due to typing limitations this will wrap `fn` in another closure 
       a: 11
       b: 22
   

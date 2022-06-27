@@ -17,7 +17,7 @@
 <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:400,500,600' rel='stylesheet' type='text/css'/>
 
 <!-- CSS -->
-<title>src/cdecl</title>
+<title>src/cdecl/cdeclapi</title>
 <link rel="stylesheet" type="text/css" href="nimdoc.out.css">
 
 <script type="text/javascript" src="dochack.js"></script>
@@ -69,7 +69,7 @@ window.addEventListener('DOMContentLoaded', main);
 <body>
 <div class="document" id="documentId">
   <div class="container">
-    <h1 class="title">src/cdecl</h1>
+    <h1 class="title">src/cdecl/cdeclapi</h1>
     <div class="row">
   <div class="three columns">
   <div class="theme-switch-wrapper">
@@ -99,15 +99,41 @@ window.addEventListener('DOMContentLoaded', main);
   </div>
   <ul class="simple simple-toc" id="toc-list">
 <li>
-  <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
+  <a class="reference reference-toplevel" href="#7" id="57">Types</a>
   <ul class="simple simple-toc-section">
-    
+      <li><a class="reference" href="#CLabel"
+    title="CLabel = CRawStr">CLabel</a></li>
+  <li><a class="reference" href="#CRawStr"
+    title="CRawStr = distinct string">CRawStr</a></li>
+  <li><a class="reference" href="#CRawToken"
+    title="CRawToken = distinct static[CRawStr]">CRawToken</a></li>
+  <li><a class="reference" href="#CToken"
+    title="CToken = distinct static[CRawStr]">CToken</a></li>
+
   </ul>
 </li>
 <li>
-  <a class="reference reference-toplevel" href="#19" id="69">Exports</a>
+  <a class="reference reference-toplevel" href="#17" id="67">Macros</a>
   <ul class="simple simple-toc-section">
-    
+      <ul class="simple nested-toc-section">symbolName
+      <li><a class="reference" href="#symbolName.m%2Cuntyped"
+    title="symbolName(x: untyped): string">symbolName(x: untyped): string</a></li>
+
+  </ul>
+
+  </ul>
+</li>
+<li>
+  <a class="reference reference-toplevel" href="#18" id="68">Templates</a>
+  <ul class="simple simple-toc-section">
+      <ul class="simple nested-toc-section">symbolVal
+      <li><a class="reference" href="#symbolVal.t%2CCRawStr"
+    title="symbolVal(x: CRawStr): string">symbolVal(x: CRawStr): string</a></li>
+  <li><a class="reference" href="#symbolVal.t%2Cstring"
+    title="symbolVal(x: string): string">symbolVal(x: string): string</a></li>
+
+  </ul>
+
   </ul>
 </li>
 
@@ -119,15 +145,80 @@ window.addEventListener('DOMContentLoaded', main);
   <div id="tocRoot"></div>
   
   <p class="module-desc"></p>
-  <div class="section" id="6">
-<h1><a class="toc-backref" href="#6">Imports</a></h1>
+  <div class="section" id="7">
+<h1><a class="toc-backref" href="#7">Types</a></h1>
 <dl class="item">
-<a class="reference external" href="cdecls.html">cdecls</a>, <a class="reference external" href="cdeclapi.html">cdeclapi</a>, <a class="reference external" href="applies.html">applies</a>
+<div id="CLabel">
+<dt><pre><a href="cdeclapi.html#CLabel"><span class="Identifier">CLabel</span></a> <span class="Other">=</span> <a href="cdeclapi.html#CRawStr"><span class="Identifier">CRawStr</span></a></pre></dt>
+<dd>
+
+
+ used to represent a C macro &quot;label&quot;, an alias for CRawStr
+
+</dd>
+</div>
+<div id="CRawStr">
+<dt><pre><a href="cdeclapi.html#CRawStr"><span class="Identifier">CRawStr</span></a> <span class="Other">=</span> <span class="Keyword">distinct</span> <span class="Identifier">string</span></pre></dt>
+<dd>
+
+
+ Represents a raw string that gets interpolated into generated C ouput
+
+</dd>
+</div>
+<div id="CRawToken">
+<dt><pre><a href="cdeclapi.html#CRawToken"><span class="Identifier">CRawToken</span></a> <span class="Other">=</span> <span class="Keyword">distinct</span> <span class="Identifier">static</span><span class="Other">[</span><a href="cdeclapi.html#CRawStr"><span class="Identifier">CRawStr</span></a><span class="Other">]</span></pre></dt>
+<dd>
+
+
+ Represents a C token derived from a Nim expression
+
+</dd>
+</div>
+<div id="CToken">
+<dt><pre><a href="cdeclapi.html#CToken"><span class="Identifier">CToken</span></a> <span class="Other">=</span> <span class="Keyword">distinct</span> <span class="Identifier">static</span><span class="Other">[</span><a href="cdeclapi.html#CRawStr"><span class="Identifier">CRawStr</span></a><span class="Other">]</span></pre></dt>
+<dd>
+
+
+ Represents a C token derived from a Nim expression
+
+</dd>
+</div>
+
 </dl></div>
-<div class="section" id="19">
-<h1><a class="toc-backref" href="#19">Exports</a></h1>
+<div class="section" id="17">
+<h1><a class="toc-backref" href="#17">Macros</a></h1>
 <dl class="item">
-<a href="cdeclapi.html#symbolName.m,untyped"><span class="Identifier">symbolName</span></a>, <a href="cdecls.html#cmacrowrapper.m,string,untyped"><span class="Identifier">cmacrowrapper</span></a>, <a href="cdeclapi.html#CRawToken"><span class="Identifier">CRawToken</span></a>, <a href="cdeclapi.html#symbolVal.t,CRawStr"><span class="Identifier">symbolVal</span></a>, <a href="cdeclapi.html#symbolVal.t,string"><span class="Identifier">symbolVal</span></a>, <a href="cdeclapi.html#CRawStr"><span class="Identifier">CRawStr</span></a>, <a href="cdeclapi.html#CToken"><span class="Identifier">CToken</span></a>, <a href="cdecls.html#cdeclmacro.m,string,untyped"><span class="Identifier">cdeclmacro</span></a>, <a href="cdeclapi.html#CLabel"><span class="Identifier">CLabel</span></a>, <a href="cdeclapi.html#symbolName.m,untyped_2"><span class="Identifier">symbolName</span></a>, <a href="cdeclapi.html#symbolVal.t,CRawStr_2"><span class="Identifier">symbolVal</span></a>, <a href="cdeclapi.html#symbolVal.t,string_2"><span class="Identifier">symbolVal</span></a>, <a href="cdeclapi.html#CRawToken_2"><span class="Identifier">CRawToken</span></a>, <a href="cdeclapi.html#CRawStr_2"><span class="Identifier">CRawStr</span></a>, <a href="cdeclapi.html#CToken_2"><span class="Identifier">CToken</span></a>, <a href="cdeclapi.html#CLabel_2"><span class="Identifier">CLabel</span></a>, <a href="applies.html#unpackLabelsAsArgs.m,typed,varargs[untyped]"><span class="Identifier">unpackLabelsAsArgs</span></a>, <a href="applies.html#unpackObjectArgs.m,untyped,typed,varargs[untyped]"><span class="Identifier">unpackObjectArgs</span></a>, <a href="applies.html#Param"><span class="Identifier">Param</span></a>, <a href="applies.html#unpackObjectArgFields.m,untyped,typed,varargs[untyped]"><span class="Identifier">unpackObjectArgFields</span></a>
+<div id="symbolName.m,untyped">
+<dt><pre><span class="Keyword">macro</span> <a href="#symbolName.m%2Cuntyped"><span class="Identifier">symbolName</span></a><span class="Other">(</span><span class="Identifier">x</span><span class="Other">:</span> <span class="Identifier">untyped</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+<dd>
+
+Get a string representation of a Nim symbol
+
+</dd>
+</div>
+
+</dl></div>
+<div class="section" id="18">
+<h1><a class="toc-backref" href="#18">Templates</a></h1>
+<dl class="item">
+<div id="symbolVal.t,CRawStr">
+<dt><pre><span class="Keyword">template</span> <a href="#symbolVal.t%2CCRawStr"><span class="Identifier">symbolVal</span></a><span class="Other">(</span><span class="Identifier">x</span><span class="Other">:</span> <a href="cdeclapi.html#CRawStr"><span class="Identifier">CRawStr</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+<dd>
+
+Turns a CRawStr into a normal string
+
+</dd>
+</div>
+<div id="symbolVal.t,string">
+<dt><pre><span class="Keyword">template</span> <a href="#symbolVal.t%2Cstring"><span class="Identifier">symbolVal</span></a><span class="Other">(</span><span class="Identifier">x</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+<dd>
+
+Turns a CRawStr into a normal string
+
+</dd>
+</div>
+
 </dl></div>
 
   </div>
@@ -137,7 +228,7 @@ window.addEventListener('DOMContentLoaded', main);
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-27 21:58:36 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-27 21:58:37 UTC</small>
       </div>
     </div>
   </div>
