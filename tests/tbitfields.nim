@@ -23,7 +23,7 @@ bitfields RegConfig(uint8):
   ## define RegConfig integer with accessors:
   clockEnable: bool[7..7]
   daisyIn: bool[6..6]
-  speed: Speed[5..3]
+  speed: Speed[4..3]
   gain: GainValues[2..0]
 
 type
@@ -45,11 +45,12 @@ suite "bit ops":
     unittest.check speed == k1
 
   test "set speed":
-    registerConfig.speed = k2
-    echo fmt"{registerConfig.repr=}"
+    registerConfig.speed = k3
+    echo fmt"pre: {$registerConfig=}"
     let speed = registerConfig.speed
+    echo fmt"post: {$registerConfig=}"
     echo fmt"{speed=}"
-    unittest.check speed == k2
+    unittest.check speed == k3
 
   test "get speed":
     let speed = registerConfig.speed

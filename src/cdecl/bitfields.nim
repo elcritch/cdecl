@@ -16,6 +16,7 @@ macro bitfields*(name, def: untyped) =
 
   echo fmt"{strTypeName.treeRepr=}"
   var stmts = newStmtList()
+  var fields = newSeq[NimNode]()
   for idx, identdef in reclist:
     echo fmt"{identdef.treeRepr=}"
     if identdef.kind == nnkCommentStmt:
@@ -35,6 +36,7 @@ macro bitfields*(name, def: untyped) =
         rngA = min(fieldRngA, fieldRngB)
         rngB = max(fieldRngA, fieldRngB)
 
+      fields.add fieldName
       stmts.add quote do:
         proc `fieldName`*(reg: `typeName`): `fieldType` =
           let val = bitsliced(`intTyp`(reg), `rngA`..`rngB`)
@@ -49,9 +51,9 @@ macro bitfields*(name, def: untyped) =
       `typeName`* = distinct `intTyp`
     
     proc `dollarName`*(reg: `typeName`): string =
-      result = `strTypeName` & "(" &
+      result =  "0b" &
                 toBin(int64(reg), 8*sizeof(`typeName`)) &
-                ")"
+                "'" & `strTypeName` 
 
   result.add stmts
   
