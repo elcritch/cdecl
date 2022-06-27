@@ -20,58 +20,52 @@ type
     X16 = 0b111
 
 bitfields RegConfig(uint8):
-  ## define RegConfig integer with accessors:
+  ## define RegConfig integer with accessors for `bitfields`
   clockEnable: bool[7..7]
   daisyIn: bool[6..6]
   speed: Speed[3..4] # range are re-ordered using min/max
   gain: GainValues[2..0]
 
-type
-  
-  RegChannel* = distinct uint8
-  RegChannelX* = object
-    id: range[1..12]
-    chset: RegChannel
+bitfields RegChannel(uint16):
+  ## define RegConfig integer with accessors for `bitfields`
+  speed: int8[4..9] # range are re-ordered using min/max
+  gain: int8[2..0]
 
 
 suite "bit ops":
 
   setup:
-    var registerConfig: RegConfig
+    var regConfig: RegConfig
+    var regChannel: RegChannel
 
   test "get speed":
-    let speed = registerConfig.speed
-    echo fmt"{speed=}"
-    unittest.check speed == k1
+    unittest.check regConfig.speed == k1
 
   test "set speed":
-    registerConfig.speed = k3
-    echo fmt"pre: {$registerConfig=}"
-    let speed = registerConfig.speed
-    echo fmt"post: {$registerConfig=}"
-    echo fmt"{speed=}"
-    unittest.check speed == k3
-    unittest.check registerConfig.int == 0b0001_1000
+    regConfig.speed = k3
+    unittest.check regConfig.speed == k3
+    unittest.check regConfig.int == 0b0001_1000
 
   test "get gain":
-    let gain = registerConfig.gain
-    echo fmt"{$registerConfig=} {gain=}"
+    let gain = regConfig.gain
     unittest.check gain == X2
 
   test "set gain":
-    registerConfig.gain= X4
-    echo fmt"{$registerConfig=}"
-    let gain = registerConfig.gain
-    echo fmt"{gain=}"
+    regConfig.gain= X4
+    let gain = regConfig.gain
     unittest.check gain == X4
 
   test "set all ":
-    registerConfig.clockEnable = true
-    registerConfig.speed = k3
-    registerConfig.gain= X6
+    regConfig.clockEnable = true
+    regConfig.speed = k3
+    regConfig.gain= X6
 
-    echo fmt"{$registerConfig=}"
-    unittest.check registerConfig.clockEnable == true
-    unittest.check registerConfig.gain == X6
-    unittest.check registerConfig.speed == k3
-    unittest.check registerConfig.int == 0b1001_1010
+    echo fmt"{$regConfig=}"
+    unittest.check regConfig.clockEnable == true
+    unittest.check regConfig.gain == X6
+    unittest.check regConfig.speed == k3
+    unittest.check regConfig.int == 0b1001_1010
+
+  test "set reg channel":
+    regChannel.gain= 5
+    echo fmt"{$regChannel=}"

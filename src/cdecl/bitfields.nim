@@ -7,6 +7,21 @@ proc setBitsSlice*[T: SomeInteger, V](b: var T, slice: Slice[int], x: V) =
   b.setMask(T(x) shl slice.a)
 
 macro bitfields*(name, def: untyped) =
+  ## Create a new distinct integer type with accessors
+  ## for `bitfields` that set and get bits for each
+  ## field.
+  ## 
+  ## The basic syntax is `fieldname: Type[4..5]`
+  ## where the range `4..5` is the bits for the value. 
+  ## The range is inclusive like normal Slices. 
+  ## 
+  runnableExamples:
+    bitfields RegConfig(uint8):
+      ## define RegConfig integer with accessors for `bitfields`
+      clockEnable: bool[7..7]
+      daisyIn: bool[6..6]
+      speed: int8[4..2]
+
   let
     typeName = name[0]
     strTypeName = newStrLitNode typeName.repr
