@@ -191,7 +191,7 @@ Create a new distinct integer type with accessors for <tt class="docutils litera
 <dd><tt class="docutils literal"><span class="pre"><span class="Identifier">speed</span><span class="Punctuation">:</span> <span class="Identifier">int8</span><span class="Punctuation">[</span><span class="FloatNumber">7.</span><span class="Operator">.</span><span class="DecNumber">4</span><span class="Punctuation">]</span></span></tt></dd>
 </dl>
 <p>The accessors generated are very simple and what you would generally produce by hand. For example:</p>
-<blockquote><p><pre class="listing"><span class="Identifier">bitfields</span> <span class="Identifier">RegConfig</span><span class="Punctuation">(</span><span class="Identifier">uint8</span><span class="Punctuation">)</span><span class="Punctuation">:</span>
+<blockquote><p><pre class="listing"><span class="Identifier">bitfields</span> <span class="Identifier">RegConfig</span><span class="Punctuation">(</span><span class="Identifier">uint16</span><span class="Punctuation">)</span><span class="Punctuation">:</span>
     <span class="Identifier">speed</span><span class="Punctuation">:</span> <span class="Identifier">int8</span><span class="Punctuation">[</span><span class="FloatNumber">4.</span><span class="Operator">.</span><span class="DecNumber">2</span><span class="Punctuation">]</span>
   </pre></p></blockquote>
 <dl class="docutils"><dt>Generates code similar too:</dt>

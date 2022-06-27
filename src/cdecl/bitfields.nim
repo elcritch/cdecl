@@ -29,7 +29,7 @@ macro bitfields*(name, def: untyped) =
   ## would generally produce by hand. For example: 
   ## 
   ##   ```nim
-  ##   bitfields RegConfig(uint8):
+  ##   bitfields RegConfig(uint16):
   ##     speed: int8[4..2]
   ##   ```
   ## 
