@@ -34,6 +34,7 @@ macro bitfields*(name, def: untyped) =
   ##   ```
   ## 
   ## Generates code similar too:
+  ##   ```nim
   ##   type
   ##     RegChannel = distinct uint16
   ## 
