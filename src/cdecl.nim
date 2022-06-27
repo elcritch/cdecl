@@ -14,11 +14,14 @@ export cdecls, cdeclapi, applies, bitfields
 ## 
 ## Current macros includes: 
 ## 
-## - `cdecls <cdecls.html>`_: using C macros that declare variables
-## - `unpackObjectArgs`: macro to *splat* an object to position arguments
-## - `unpackObjectArgFields`: macro to *splat* an object to keyword arguments
-## - `unpackLabelsAsArgs`: turn *labels* to named arguments
-## - `bitfields`: create *bitfield* 
+## - `cdecls <cdecls.html>`_: Macros to help using C macros that declare variables
+##   - `cdeclmacro`
+## - `applies <applies.html>`_: Macros that unpack arguments from various forms and calls functions
+##   - `unpackObjectArgs`: macro to *splat* an object to position arguments
+##   - `unpackObjectArgFields`: macro to *splat* an object to keyword arguments
+##   - `unpackLabelsAsArgs`: turn *labels* to named arguments
+## - `bitfields <bitfields.html>`_: Macros for making bitfield style accessor 
+##   - `bitfields`: create *bitfield* accessors for hardware registers using any int type
 ## 
 ## You can see various usages in the [tests ](https://github.com/elcritch/cdecl/tree/main/tests) folder. 
 ## 

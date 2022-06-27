@@ -3,11 +3,17 @@
 <h2><a class="toc-backref" id="cdotddotedotcdotldotcolon-commonly-desired-edge-case-library" href="#cdotddotedotcdotldotcolon-commonly-desired-edge-case-library">C.D.E.C.L.: Commonly Desired Edge Case Library</a></h2><p>Small library for macros to handle various edge cases for Nim syntax. These are mostly edge case syntax handlers or tricky C Macro interfacings. The goal is to implement them as generically and well unit tested as possible.</p>
 <p>Originally it was just for a C-Declaration marco but luckily the name CDecl lends itself to the above acronym.</p>
 <p>Current macros includes:</p>
-<ul class="simple"><li><a class="reference external" href="cdecl/cdecls.html">cdecls</a>: using C macros that declare variables</li>
-<li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackObjectArgs</span></span></tt>: macro to <em>splat</em> an object to position arguments</li>
+<ul class="simple"><li><a class="reference external" href="cdecls.html">cdecls</a>: Macros to help using C macros that declare variables<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">cdeclmacro</span></span></tt></li>
+</ul>
+</li>
+<li><a class="reference external" href="applies.html">applies</a>: Macros that unpack arguments from various forms and calls functions<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackObjectArgs</span></span></tt>: macro to <em>splat</em> an object to position arguments</li>
 <li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackObjectArgFields</span></span></tt>: macro to <em>splat</em> an object to keyword arguments</li>
 <li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackLabelsAsArgs</span></span></tt>: turn <em>labels</em> to named arguments</li>
-<li><tt class="docutils literal"><span class="pre"><span class="Identifier">bitfields</span></span></tt>: create <em>bitfield</em></li>
+</ul>
+</li>
+<li><a class="reference external" href="bitfields.html">bitfields</a>: Macros for making bitfield style accessor<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">bitfields</span></span></tt>: create <em>bitfield</em> accessors for hardware registers using any int type</li>
+</ul>
+</li>
 </ul>
 <p>You can see various usages in the <a class="reference external" href="https://github.com/elcritch/cdecl/tree/main/tests">tests </a> folder.</p>
 
