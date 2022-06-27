@@ -66,9 +66,12 @@ suite "bit ops":
     unittest.check gain == X4
 
   test "set all ":
+    registerConfig.clockEnable = true
     registerConfig.speed = k3
     registerConfig.gain= X6
 
+    echo fmt"{$registerConfig=}"
+    unittest.check registerConfig.clockEnable == true
     unittest.check registerConfig.gain == X6
     unittest.check registerConfig.speed == k3
-    unittest.check registerConfig.int == 0b0001_1010
+    unittest.check registerConfig.int == 0b1001_1010
