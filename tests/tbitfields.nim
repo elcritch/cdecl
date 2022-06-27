@@ -26,11 +26,13 @@ bitfields RegConfig(uint8):
   speed: Speed[3..4] # range are re-ordered using min/max
   gain: GainValues[2..0]
 
-bitfields RegChannel(uint32):
+bitfields RegChannel(uint16):
   ## define RegConfig integer with accessors for `bitfields`
   speed: uint8[4..9] # range are re-ordered using min/max
   gain: int8[2..0]
-  largenum: int8[28..20] # range are re-ordered using min/max
+
+bitfields RegChannel2(uint32):
+  largenum: int8[6..0] # range are re-ordered using min/max
 
 
 suite "bit ops":
@@ -38,6 +40,7 @@ suite "bit ops":
   setup:
     var regConfig {.used.}: RegConfig
     var regChannel {.used.}: RegChannel
+    var regChannel2 {.used.}: RegChannel2
 
   test "get speed":
     check regConfig.speed == k1
@@ -72,12 +75,16 @@ suite "bit ops":
     check regChannel.gain == 5
     regChannel.speed= 31
     check regChannel.speed == 31
-    regChannel.largenum= 127'i8
-    check regChannel.largenum == 127'i8
-    regChannel.largenum= 127'i8
+
+  test "set reg channel":
+    regChannel2.largenum= 127'i8
+    echo fmt"{$regChannel=}"
+    check regChannel2.largenum == 127'i8
+    regChannel2.largenum= 127'i8
     echo fmt"{$regChannel=}"
 
   test "check setting signed reg channel":
-    regChannel.largenum= -10'i8
-    check regChannel.largenum == -10'i8
+    regChannel2.largenum= -10'i8
+    echo fmt"{$regChannel=}"
+    check regChannel2.largenum == -10'i8
     echo fmt"{$regChannel=}"
