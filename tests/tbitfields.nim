@@ -29,10 +29,11 @@ bitfields RegConfig(uint8):
 bitfields RegChannel(uint16):
   ## define RegConfig integer with accessors for `bitfields`
   speed: uint8[4..9] # range are re-ordered using min/max
-  gain: int8[2..0]
+  gain: uint8[2..0]
 
 bitfields RegChannel2(uint32):
-  largenum: int8[6..0] # range are re-ordered using min/max
+  largeunum: uint8[6..16] # range are re-ordered using min/max
+  largenum: int8[5..0] # range are re-ordered using min/max
 
 
 suite "bit ops":
@@ -77,14 +78,13 @@ suite "bit ops":
     check regChannel.speed == 31
 
   test "set reg channel":
-    regChannel2.largenum= 127'i8
+    regChannel2.largeunum= 36'u8
     echo fmt"{$regChannel=}"
-    check regChannel2.largenum == 127'i8
-    regChannel2.largenum= 127'i8
+    check regChannel2.largeunum == 36'u8
     echo fmt"{$regChannel=}"
 
   test "check setting signed reg channel":
     regChannel2.largenum= -10'i8
-    echo fmt"{$regChannel=}"
+    echo fmt"{$regChannel2=} {toBin(-10'i8, 8)=}"
     check regChannel2.largenum == -10'i8
-    echo fmt"{$regChannel=}"
+    echo fmt"{$regChannel2=}"
