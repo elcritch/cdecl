@@ -23,7 +23,7 @@ bitfields RegConfig(uint8):
   ## define RegConfig integer with accessors:
   clockEnable: bool[7..7]
   daisyIn: bool[6..6]
-  speed: Speed[4..3]
+  speed: Speed[3..4] # range are re-ordered using min/max
   gain: GainValues[2..0]
 
 type
