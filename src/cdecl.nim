@@ -12,7 +12,6 @@ export cdecls, cdeclapi, applies, bitfields
 ## 
 ## Small library for macros to handle various edge cases for Nim syntax. These are mostly edge case syntax handlers or tricky C Macro interfacings. The goal is to implement them as generically and well unit tested as possible.
 ## 
-## 
 ## Current macros includes: 
 ## 
 ## - `cdecls </cdecl/cdecls.html>`_: Macros to help using C macros that declare variables
