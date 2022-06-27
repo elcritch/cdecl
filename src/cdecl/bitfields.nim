@@ -43,9 +43,15 @@ macro bitfields*(name, def: untyped) =
           reg.`intTyp`.setBitsSlice(`rngA`..`rngB`, x)
 
   result = newStmtList()
+  let dollarName = ident "$"
   result.add quote do:
     type
       `typeName`* = distinct `intTyp`
+    
+    proc `dollarName`*(reg: `typeName`): string =
+      result = `strTypeName` & "(" &
+                toBin(int64(reg), 8*sizeof(`typeName`)) &
+                ")"
 
   result.add stmts
   

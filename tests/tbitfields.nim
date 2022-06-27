@@ -13,19 +13,20 @@ type
     k2 = 0b10
     k3 = 0b11
 
-
-bitfields RegConfig(uint8):
-  ## define RegConfig integer with accessors:
-  clockEnable: bool[6..6]
-  daisyIn: bool[5..5]
-  speed: Speed[3..1]
-
-type
   GainValues* {.pure.} = enum
     X2 = 0b000
     X4 = 0b001
     X6 = 0b010
     X16 = 0b111
+
+bitfields RegConfig(uint8):
+  ## define RegConfig integer with accessors:
+  clockEnable: bool[7..7]
+  daisyIn: bool[6..6]
+  speed: Speed[5..3]
+  gain: GainValues[2..0]
+
+type
   
   RegChannel* = distinct uint8
   RegChannelX* = object
@@ -46,6 +47,18 @@ suite "bit ops":
   test "set speed":
     registerConfig.speed = k2
     echo fmt"{registerConfig.repr=}"
+    let speed = registerConfig.speed
+    echo fmt"{speed=}"
+    unittest.check speed == k2
+
+  test "get speed":
+    let speed = registerConfig.speed
+    echo fmt"{$registerConfig=} {speed=}"
+    unittest.check speed == k1
+
+  test "set speed":
+    registerConfig.speed = k2
+    echo fmt"{$registerConfig=}"
     let speed = registerConfig.speed
     echo fmt"{speed=}"
     unittest.check speed == k2
