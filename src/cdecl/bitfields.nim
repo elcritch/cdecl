@@ -45,11 +45,14 @@ macro bitfields*(name, def: untyped) =
           reg.`intTyp`.setBitsSlice(`rngA`..`rngB`, x)
 
   result = newStmtList()
-  let dollarName = ident "$"
+  let
+    dollarName = ident "$"
+    eqName = ident "=="
   result.add quote do:
     type
       `typeName`* = distinct `intTyp`
     
+    proc `eqName`*(a: `typeName`, b: `typeName`): bool {.borrow.}
     proc `dollarName`*(reg: `typeName`): string =
       result =  "0b" &
                 toBin(int64(reg), 8*sizeof(`typeName`)) &

@@ -51,6 +51,7 @@ suite "bit ops":
     echo fmt"post: {$registerConfig=}"
     echo fmt"{speed=}"
     unittest.check speed == k3
+    unittest.check registerConfig.int == 0b0001_1000
 
   test "get speed":
     let speed = registerConfig.speed
