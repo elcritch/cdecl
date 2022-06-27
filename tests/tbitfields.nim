@@ -15,9 +15,10 @@ type
 
 
 bitfields RegConfig(uint8):
-    clockEnable: bool[6..6]
-    daisyIn: bool[5..5]
-    speed: Speed[3..1]
+  ## define RegConfig integer with accessors:
+  clockEnable: bool[6..6]
+  daisyIn: bool[5..5]
+  speed: Speed[3..1]
 
 type
   GainValues* {.pure.} = enum
