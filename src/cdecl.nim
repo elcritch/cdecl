@@ -14,9 +14,9 @@ export cdecls, cdeclapi, applies, bitfields
 ## 
 ## Current macros includes: 
 ## 
-## - `cdecls <cdecl/cdecls.html>`_: Macros to help using C macros that declare variables
+## - `cdecls </cdecl/cdecls.html>`_: Macros to help using C macros that declare variables
 ##   - `cdeclmacro`
-## - `applies <cdecl/applies.html>`_: Macros that unpack arguments from various forms and calls functions
+## - `applies <applies.html>`_: Macros that unpack arguments from various forms and calls functions
 ##   - `unpackObjectArgs`: macro to *splat* an object to position arguments
 ##   - `unpackObjectArgFields`: macro to *splat* an object to keyword arguments
 ##   - `unpackLabelsAsArgs`: turn *labels* to named arguments

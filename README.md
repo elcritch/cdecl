@@ -3,10 +3,10 @@
 <h2><a class="toc-backref" id="cdotddotedotcdotldotcolon-commonly-desired-edge-case-library" href="#cdotddotedotcdotldotcolon-commonly-desired-edge-case-library">C.D.E.C.L.: Commonly Desired Edge Case Library</a></h2><p>See full docs at <a class="reference external" href="https://elcritch.github.io/cdecl/">docs</a> or source on github at <a class="reference external" href="https://github.com/elcritch/cdecl">elcritch/cdecl</a>.</p>
 <p>Small library for macros to handle various edge cases for Nim syntax. These are mostly edge case syntax handlers or tricky C Macro interfacings. The goal is to implement them as generically and well unit tested as possible.</p>
 <p>Current macros includes:</p>
-<ul class="simple"><li><a class="reference external" href="cdecl/cdecls.html">cdecls</a>: Macros to help using C macros that declare variables<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">cdeclmacro</span></span></tt></li>
+<ul class="simple"><li><a class="reference external" href="/cdecl/cdecls.html">cdecls</a>: Macros to help using C macros that declare variables<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">cdeclmacro</span></span></tt></li>
 </ul>
 </li>
-<li><a class="reference external" href="cdecl/applies.html">applies</a>: Macros that unpack arguments from various forms and calls functions<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackObjectArgs</span></span></tt>: macro to <em>splat</em> an object to position arguments</li>
+<li><a class="reference external" href="applies.html">applies</a>: Macros that unpack arguments from various forms and calls functions<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackObjectArgs</span></span></tt>: macro to <em>splat</em> an object to position arguments</li>
 <li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackObjectArgFields</span></span></tt>: macro to <em>splat</em> an object to keyword arguments</li>
 <li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackLabelsAsArgs</span></span></tt>: turn <em>labels</em> to named arguments</li>
 </ul>
