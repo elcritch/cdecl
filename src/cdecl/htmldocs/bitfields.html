@@ -183,7 +183,20 @@ Create a new distinct integer type with accessors for <tt class="docutils litera
   <span class="Comment">## define RegConfig integer with accessors for `bitfields`</span>
   <span class="Identifier">clockEnable</span><span class="Punctuation">:</span> <span class="Identifier">bool</span><span class="Punctuation">[</span><span class="FloatNumber">7.</span><span class="Operator">.</span><span class="DecNumber">7</span><span class="Punctuation">]</span>
   <span class="Identifier">daisyIn</span><span class="Punctuation">:</span> <span class="Identifier">bool</span><span class="Punctuation">[</span><span class="FloatNumber">6.</span><span class="Operator">.</span><span class="DecNumber">6</span><span class="Punctuation">]</span>
-  <span class="Identifier">speed</span><span class="Punctuation">:</span> <span class="Identifier">int8</span><span class="Punctuation">[</span><span class="FloatNumber">4.</span><span class="Operator">.</span><span class="DecNumber">2</span><span class="Punctuation">]</span></pre>
+  <span class="Identifier">speed</span><span class="Punctuation">:</span> <span class="Identifier">int8</span><span class="Punctuation">[</span><span class="FloatNumber">5.</span><span class="Operator">.</span><span class="DecNumber">1</span><span class="Punctuation">]</span>
+
+<span class="Comment">## Now use it to make a new register field</span>
+<span class="Keyword">var</span> <span class="Identifier">regConfig</span><span class="Punctuation">:</span> <span class="Identifier">RegConfig</span>
+
+<span class="Identifier">regConfig</span><span class="Operator">.</span><span class="Identifier">clockEnable</span><span class="Operator">=</span> <span class="Identifier">true</span>
+<span class="Identifier">regConfig</span><span class="Operator">.</span><span class="Identifier">speed</span><span class="Operator">=</span> <span class="Operator">-</span><span class="DecNumber">10</span>
+
+<span class="Identifier">echo</span> <span class="StringLit">&quot;regConfig.speed &quot;</span><span class="Punctuation">,</span> <span class="Identifier">regConfig</span><span class="Operator">.</span><span class="Identifier">speed</span> 
+<span class="Identifier">assert</span> <span class="Identifier">regConfig</span><span class="Operator">.</span><span class="Identifier">clockEnable</span> <span class="Operator">==</span> <span class="Identifier">true</span>
+<span class="Identifier">assert</span> <span class="Identifier">regConfig</span><span class="Operator">.</span><span class="Identifier">speed</span> <span class="Operator">==</span> <span class="Operator">-</span><span class="DecNumber">10</span>
+<span class="Comment">## the type of `RegConfig` is just a `distinct uint8`</span>
+<span class="Keyword">import</span> <span class="Identifier">typetraits</span>
+<span class="Identifier">assert</span> <span class="Identifier">distinctBase</span><span class="Punctuation">(</span><span class="Identifier">typeof</span><span class="Punctuation">(</span><span class="Identifier">regConfig</span><span class="Punctuation">)</span><span class="Punctuation">)</span> <span class="Keyword">is</span> <span class="Identifier">uint8</span></pre>
 
 </dd>
 </div>
@@ -197,7 +210,7 @@ Create a new distinct integer type with accessors for <tt class="docutils litera
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-27 21:36:54 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2022-06-27 21:58:39 UTC</small>
       </div>
     </div>
   </div>

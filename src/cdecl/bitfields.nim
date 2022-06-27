@@ -55,7 +55,20 @@ macro bitfields*(name, def: untyped) =
       ## define RegConfig integer with accessors for `bitfields`
       clockEnable: bool[7..7]
       daisyIn: bool[6..6]
-      speed: int8[4..2]
+      speed: int8[5..1]
+
+    ## Now use it to make a new register field
+    var regConfig: RegConfig
+
+    regConfig.clockEnable= true
+    regConfig.speed= -10
+
+    echo "regConfig.speed ", regConfig.speed 
+    assert regConfig.clockEnable == true
+    assert regConfig.speed == -10
+    ## the type of `RegConfig` is just a `distinct uint8`
+    import typetraits
+    assert distinctBase(typeof(regConfig)) is uint8
 
   let
     typeName = name[0]
