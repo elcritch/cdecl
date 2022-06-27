@@ -6,7 +6,7 @@
 <ul class="simple"><li><a class="reference external" href="cdecls.html">cdecls</a>: Macros to help using C macros that declare variables<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">cdeclmacro</span></span></tt></li>
 </ul>
 </li>
-<li><a class="reference external" href="applies.html">applies</a>: Macros that unpack arguments from various forms and calls functions<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackObjectArgs</span></span></tt>: macro to <em>splat</em> an object to position arguments</li>
+<li><a class="reference external" href="decl/applies.html">applies</a>: Macros that unpack arguments from various forms and calls functions<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackObjectArgs</span></span></tt>: macro to <em>splat</em> an object to position arguments</li>
 <li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackObjectArgFields</span></span></tt>: macro to <em>splat</em> an object to keyword arguments</li>
 <li><tt class="docutils literal"><span class="pre"><span class="Identifier">unpackLabelsAsArgs</span></span></tt>: turn <em>labels</em> to named arguments</li>
 </ul>
