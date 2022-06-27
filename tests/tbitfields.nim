@@ -1,4 +1,4 @@
-import unittest except check
+import unittest
 import strutils, strformat
 import print
 
@@ -39,21 +39,21 @@ suite "bit ops":
     var regChannel: RegChannel
 
   test "get speed":
-    unittest.check regConfig.speed == k1
+    check regConfig.speed == k1
 
   test "set speed":
     regConfig.speed = k3
-    unittest.check regConfig.speed == k3
-    unittest.check regConfig.int == 0b0001_1000
+    check regConfig.speed == k3
+    check regConfig.int == 0b0001_1000
 
   test "get gain":
     let gain = regConfig.gain
-    unittest.check gain == X2
+    check gain == X2
 
   test "set gain":
     regConfig.gain= X4
     let gain = regConfig.gain
-    unittest.check gain == X4
+    check gain == X4
 
   test "set all ":
     regConfig.clockEnable = true
@@ -61,11 +61,14 @@ suite "bit ops":
     regConfig.gain= X6
 
     echo fmt"{$regConfig=}"
-    unittest.check regConfig.clockEnable == true
-    unittest.check regConfig.gain == X6
-    unittest.check regConfig.speed == k3
-    unittest.check regConfig.int == 0b1001_1010
+    check regConfig.clockEnable == true
+    check regConfig.gain == X6
+    check regConfig.speed == k3
+    check regConfig.int == 0b1001_1010
 
   test "set reg channel":
     regChannel.gain= 5
+    check regChannel.gain == 5
+    regChannel.speed= 31
+    check regChannel.speed == 31
     echo fmt"{$regChannel=}"
