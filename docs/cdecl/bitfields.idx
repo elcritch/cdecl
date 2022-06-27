@@ -1,0 +1,2 @@
+setBitsSlice	cdecl/bitfields.html#setBitsSlice,T,Slice[int],V	bitfields: setBitsSlice[T: SomeInteger; V](b: var T; slice: Slice[int]; x: V)	
+bitfields	cdecl/bitfields.html#bitfields.m,untyped,untyped	bitfields: bitfields(name, def: untyped)	

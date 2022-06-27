@@ -1,0 +1,2 @@
+cdeclmacro	cdecl/cdecls.html#cdeclmacro.m,string,untyped	cdecls: cdeclmacro(name: string; def: untyped)	
+cmacrowrapper	cdecl/cdecls.html#cmacrowrapper.m,string,untyped	cdecls: cmacrowrapper(name: string; def: untyped)	

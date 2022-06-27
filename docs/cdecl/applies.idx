@@ -1,0 +1,4 @@
+unpackObjectArgs	cdecl/applies.html#unpackObjectArgs.m,untyped,typed,varargs[untyped]	applies: unpackObjectArgs(callee: untyped; arg: typed; extras: varargs[untyped]): untyped	
+unpackObjectArgFields	cdecl/applies.html#unpackObjectArgFields.m,untyped,typed,varargs[untyped]	applies: unpackObjectArgFields(callee: untyped; arg: typed; extras: varargs[untyped]): untyped	
+Param	cdecl/applies.html#Param	applies: Param	
+unpackLabelsAsArgs	cdecl/applies.html#unpackLabelsAsArgs.m,typed,varargs[untyped]	applies: unpackLabelsAsArgs(callee: typed; args: varargs[untyped]): untyped	

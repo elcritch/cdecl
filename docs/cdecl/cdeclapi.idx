@@ -1,0 +1,7 @@
+CRawStr	cdecl/cdeclapi.html#CRawStr	cdeclapi: CRawStr	
+CLabel	cdecl/cdeclapi.html#CLabel	cdeclapi: CLabel	
+CRawToken	cdecl/cdeclapi.html#CRawToken	cdeclapi: CRawToken	
+CToken	cdecl/cdeclapi.html#CToken	cdeclapi: CToken	
+symbolName	cdecl/cdeclapi.html#symbolName.m,untyped	cdeclapi: symbolName(x: untyped): string	
+symbolVal	cdecl/cdeclapi.html#symbolVal.t,CRawStr	cdeclapi: symbolVal(x: CRawStr): string	
+symbolVal	cdecl/cdeclapi.html#symbolVal.t,string	cdeclapi: symbolVal(x: string): string	
