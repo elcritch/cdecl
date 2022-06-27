@@ -45,7 +45,7 @@ suite "bit ops":
 
   test "set speed":
     registerConfig.speed = k2
-    echo repr(registerConfig)
+    echo fmt"{registerConfig.repr=}"
     let speed = registerConfig.speed
     echo fmt"{speed=}"
     unittest.check speed == k2
