@@ -11,8 +11,5 @@ requires "nim >= 1.6"
 requires "macroutils >= 1.2.0"
 
 task docs, "generate docs":
-  let files = "src/cdecl/".listFiles()
+  exec("nim doc --project --outdir:docs  src/cdecl.nim")
 
-  exec("nimble doc src/cdecl.nim ")
-  for fl in files:
-    exec("nimble doc $1 " % [fl])
