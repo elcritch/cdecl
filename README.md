@@ -1,6 +1,7 @@
 
 
-<h2><a class="toc-backref" id="cdotddotedotcdotldotcolon-commonly-desired-edge-case-library" href="#cdotddotedotcdotldotcolon-commonly-desired-edge-case-library">C.D.E.C.L.: Commonly Desired Edge Case Library</a></h2><p>Small library for macros to handle various edge cases for Nim syntax. These are mostly edge case syntax handlers or tricky C Macro interfacings. The goal is to implement them as generically and well unit tested as possible.</p>
+<h2><a class="toc-backref" id="cdotddotedotcdotldotcolon-commonly-desired-edge-case-library" href="#cdotddotedotcdotldotcolon-commonly-desired-edge-case-library">C.D.E.C.L.: Commonly Desired Edge Case Library</a></h2><p>See full docs at <a class="reference external" href="https://elcritch.github.io/cdecl/">docs</a>.</p>
+<p>Small library for macros to handle various edge cases for Nim syntax. These are mostly edge case syntax handlers or tricky C Macro interfacings. The goal is to implement them as generically and well unit tested as possible.</p>
 <p>Originally it was just for a C-Declaration marco but luckily the name CDecl lends itself to the above acronym.</p>
 <p>Current macros includes:</p>
 <ul class="simple"><li><a class="reference external" href="cdecls.html">cdecls</a>: Macros to help using C macros that declare variables<ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">cdeclmacro</span></span></tt></li>
