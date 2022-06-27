@@ -53,14 +53,22 @@ suite "bit ops":
     unittest.check speed == k3
     unittest.check registerConfig.int == 0b0001_1000
 
-  test "get speed":
-    let speed = registerConfig.speed
-    echo fmt"{$registerConfig=} {speed=}"
-    unittest.check speed == k1
+  test "get gain":
+    let gain = registerConfig.gain
+    echo fmt"{$registerConfig=} {gain=}"
+    unittest.check gain == X2
 
-  test "set speed":
-    registerConfig.speed = k2
+  test "set gain":
+    registerConfig.gain= X4
     echo fmt"{$registerConfig=}"
-    let speed = registerConfig.speed
-    echo fmt"{speed=}"
-    unittest.check speed == k2
+    let gain = registerConfig.gain
+    echo fmt"{gain=}"
+    unittest.check gain == X4
+
+  test "set all ":
+    registerConfig.speed = k3
+    registerConfig.gain= X6
+
+    unittest.check registerConfig.gain == X6
+    unittest.check registerConfig.speed == k3
+    unittest.check registerConfig.int == 0b0001_1010
