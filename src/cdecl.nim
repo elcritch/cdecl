@@ -8,7 +8,7 @@ export cdecls, cdeclapi, applies, bitfields
 
 ## ## C.D.E.C.L.: Commonly Desired Edge Case Library
 ## 
-## See full docs at `docs <https://elcritch.github.io/cdecl/>`_ or source on github at `elcricth/cdecl <https://github.com/elcritch/cdecl>`_.
+## See full docs at `docs <https://elcritch.github.io/cdecl/>`_ or source on github at `elcritch/cdecl <https://github.com/elcritch/cdecl>`_.
 ## 
 ## Small library for macros to handle various edge cases for Nim syntax. These are mostly edge case syntax handlers or tricky C Macro interfacings. The goal is to implement them as generically and well unit tested as possible.
 ## 
