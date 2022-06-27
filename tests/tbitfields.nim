@@ -36,8 +36,8 @@ bitfields RegChannel(uint32):
 suite "bit ops":
 
   setup:
-    var regConfig: RegConfig
-    var regChannel: RegChannel
+    var regConfig {.used.}: RegConfig
+    var regChannel {.used.}: RegChannel
 
   test "get speed":
     check regConfig.speed == k1
@@ -75,4 +75,9 @@ suite "bit ops":
     regChannel.largenum= 127'i8
     check regChannel.largenum == 127'i8
     regChannel.largenum= 127'i8
+    echo fmt"{$regChannel=}"
+
+  test "check setting signed reg channel":
+    regChannel.largenum= -10'i8
+    check regChannel.largenum == -10'i8
     echo fmt"{$regChannel=}"

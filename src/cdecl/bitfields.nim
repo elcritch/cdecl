@@ -51,7 +51,7 @@ macro bitfields*(name, def: untyped) =
       fields.add fieldName
       stmts.add quote do:
         proc `fieldName`*(reg: `typeName`): `fieldType` =
-          let val = bitsliced(`intTyp`(reg), `rngA`..`rngB`)
+          var val = bitsliced(`intTyp`(reg), `rngA`..`rngB`)
           result = cast[`fieldType`](val)
         proc `fieldNameEq`*(reg: var `typeName`, x: `fieldType`) =
           reg.`intTyp`.setBitsSlice(`rngA`..`rngB`, x)
