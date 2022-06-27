@@ -26,10 +26,11 @@ bitfields RegConfig(uint8):
   speed: Speed[3..4] # range are re-ordered using min/max
   gain: GainValues[2..0]
 
-bitfields RegChannel(uint16):
+bitfields RegChannel(uint32):
   ## define RegConfig integer with accessors for `bitfields`
-  speed: int8[4..9] # range are re-ordered using min/max
+  speed: uint8[4..9] # range are re-ordered using min/max
   gain: int8[2..0]
+  largenum: int8[31..23] # range are re-ordered using min/max
 
 
 suite "bit ops":
@@ -71,4 +72,7 @@ suite "bit ops":
     check regChannel.gain == 5
     regChannel.speed= 31
     check regChannel.speed == 31
+    regChannel.largenum= 127'i8
+    check regChannel.largenum == 127'i8
+    regChannel.largenum= 127'i8
     echo fmt"{$regChannel=}"

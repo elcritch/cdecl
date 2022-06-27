@@ -4,7 +4,7 @@ export bitops
 
 proc setBitsSlice*[T: SomeInteger, V](b: var T, slice: Slice[int], x: V) = 
   b.clearMask(slice)
-  b.setMask(T(x) shl slice.a)
+  b.setMask(masked(T(x) shl slice.a, slice))
 
 macro bitfields*(name, def: untyped) =
   ## Create a new distinct integer type with accessors
