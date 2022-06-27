@@ -30,7 +30,7 @@ bitfields RegChannel(uint32):
   ## define RegConfig integer with accessors for `bitfields`
   speed: uint8[4..9] # range are re-ordered using min/max
   gain: int8[2..0]
-  largenum: int8[31..23] # range are re-ordered using min/max
+  largenum: int8[28..20] # range are re-ordered using min/max
 
 
 suite "bit ops":
