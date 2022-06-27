@@ -6,9 +6,7 @@ import cdecl/bitfields
 
 export cdecls, cdeclapi, applies, bitfields
 
-## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-## C.D.E.C.L.: Commonly Desired Edge Case Library
-## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+## ## C.D.E.C.L.: Commonly Desired Edge Case Library
 ## 
 ## Small library for macros to handle various edge cases for Nim syntax. These are mostly edge case syntax handlers or tricky C Macro interfacings. The goal is to implement them as generically and well unit tested as possible.
 ## 

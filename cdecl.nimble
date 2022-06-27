@@ -12,4 +12,8 @@ requires "macroutils >= 1.2.0"
 
 task docs, "generate docs":
   exec("nim doc --project --outdir:docs  src/cdecl.nim")
+  exec("cp docs/cdecl.html docs/index.html")
+  ## generate readme
+  exec("echo '' > README.md")
+  exec("mddoc src/cdecl.nim")
 
