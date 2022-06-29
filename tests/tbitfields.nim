@@ -1,6 +1,5 @@
 import unittest
 import strutils, strformat
-import print
 import macros
 
 import cdecl/bitfields
