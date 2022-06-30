@@ -1,3 +1,19 @@
+## =========
+## BitFields
+## =========
+## 
+## Macro for generating *bitfield* style accessors. The accessors
+## are portable and generally compile down to one or two `and` or `or`
+## bit operations. 
+## 
+## This is often preferable to C-style bitfields
+## which Nim does support. C-style bitfields are 
+## compiler and architecture dependent and prone
+## to breaking on field alignement, endiannes, 
+## and other issues. See https://lwn.net/Articles/478657/
+## 
+
+
 import macros, tables, strformat, strutils, sequtils
 import bitops
 export bitops
@@ -9,10 +25,14 @@ proc setBitsSlice*[T: SomeInteger, V](b: var T, slice: Slice[int], x: V) =
 macro bitfields*(name, def: untyped) =
   ## Create a new distinct integer type with accessors
   ## for `bitfields` that set and get bits for each
-  ## field. This is more stable than C-style bitfields (see below).
+  ## field. These are more stable and portable than C-style bitfields. 
+  ## 
+  ## Note: the ranges are *inclusive* and 0-based. 
   ## 
   ## The basic syntax for a `bitfield` declarations is:
-  ##     `fieldname: uint8[4..5]`
+  ##     `fieldname: uint8[0..5]`
+  ## or equivalently:
+  ##     `fieldname: uint8[5..0]`
   ## 
   ## - `fieldName` is the name of the accessors and produces both
   ##     a getter (`fieldName`) and setter (`fieldName=`)
@@ -26,7 +46,12 @@ macro bitfields*(name, def: untyped) =
   ##     `speed: int8[7..4]`
   ## 
   ## The accessors generated are very simple and what you
-  ## would generally produce by hand. For example: 
+  ## would generally produce by hand.
+  ## 
+  ## Note: accessors currrently ignore overflows / underfloags. They
+  ##       use raw casts, but are masked to not overwrite adjacent fields.
+  ## 
+  ## For example: 
   ## 
   ##   ```nim
   ##   bitfields RegConfig(uint16):
@@ -44,12 +69,6 @@ macro bitfields*(name, def: untyped) =
   ##       setBitsSlice(uint16(reg), 4 .. 9, x)
   ##   ```
   ##
-  ## This is often preferable to C-style bitfields
-  ## which Nim does support. C-style bitfields are 
-  ## compiler and architecture dependent and prone
-  ## to breaking on field alignement, endiannes, 
-  ## and other issues. See https://lwn.net/Articles/478657/
-  ## 
   runnableExamples:
     bitfields RegConfig(uint8):
       ## define RegConfig integer with accessors for `bitfields`
