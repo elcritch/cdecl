@@ -56,9 +56,16 @@ proc add*(father, son: NimNode) =
   assert son != nil
   father.sons.add(son)
 
-proc add*(father: NimNode, children: varargs[NimNode]): NimNode =
+proc add*(father: NimNode, children: varargs[NimNode]): NimNode {.discardable.} =
   father.sons.add(children)
 
+proc error*(msg: string, n: NimNode) = 
+  echo "Warning: ", msg
+  quit(1)
+
+## ~~~~~~~~~~~~~~~~~~~~
+## Copy and pasted code 
+## ~~~~~~~~~~~~~~~~~~~~
 
 proc quote*(bl: typed, op = "``"): NimNode {.magic: "QuoteAst", noSideEffect.} =
   ## Quasi-quoting operator.
@@ -180,18 +187,6 @@ proc newCall*(theProc: NimNode, args: varargs[NimNode]): NimNode =
   result = newNimNode(nnkCall)
   result.add(theProc)
   result.add(args)
-
-{.push warnings: off.}
-
-proc newCall*(theProc: NimIdent, args: varargs[NimNode]): NimNode {.deprecated:
-  "Deprecated since v0.18.1; use 'newCall(string, ...)' or 'newCall(NimNode, ...)' instead".} =
-  ## Produces a new call node. `theProc` is the proc that is called with
-  ## the arguments `args[0..]`.
-  result = newNimNode(nnkCall)
-  result.add(newIdentNode(theProc))
-  result.add(args)
-
-{.pop.}
 
 proc newCall*(theProc: string,
               args: varargs[NimNode]): NimNode =
