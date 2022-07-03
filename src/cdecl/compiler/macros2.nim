@@ -1,6 +1,15 @@
 
 import system except NimNode
 import compiler/[ast, lineinfos, idents]
+import compiler/[options, modulegraphs, condsyms]
+import compiler/[passes, passaux]
+import compiler/[
+  astalgo, modules, passes, condsyms,
+  options, sem, llstream, lineinfos, vm,
+  modulegraphs, idents, semmagic,
+  passaux, scriptconfig, semdata
+]
+
 import utils
 
 type
@@ -13,15 +22,21 @@ forwardEnums("NimSymKind", "n", TSymKind)
 template `ident=`*[T](nn: var NimNode, i: T) =
   discard
 
+var conf = newConfigRef()
 var cache = newIdentCache()
+var graph = newModuleGraph(cache, conf)
+var module = graph.makeStdinModule()
+var idgen = idGeneratorFromModule(module)
+var context: PContext = newContext(graph, module)
+# var ctx: PCtx = newCtx(module, cache, graph, idgen)
 
 template benign*(p: untyped) = p
 
 proc newNimNode*(kind: NimNodeKind): NimNode =
   result = newNode(TNodeKind(kind.ord()))
 
-# proc newTree*(kind: NimNodeKind; children: varargs[NimNode]): NimNode =
-#   result = ast.newTree(TNodeKind(kind.ord()), children)
+proc newTree*(kind: NimNodeKind; children: varargs[NimNode]): NimNode =
+  result = ast.newTree(TNodeKind(kind.ord()), children)
 
 proc ident*(name: string): NimNode =
   result = newIdentNode(cache.getIdent(name), unknownLineInfo)
@@ -62,6 +77,13 @@ proc add*(father: NimNode, children: varargs[NimNode]): NimNode {.discardable.} 
 proc error*(msg: string, n: NimNode) = 
   echo "Warning: ", msg
   quit(1)
+
+proc bindSym(id: string): NimNode = 
+  let n = ident(id)
+  if dynamicBindSym notin context.features:
+    result = semBindSym(context, n)
+  else:
+    result = semDynamicBindSym(context, n)
 
 ## ~~~~~~~~~~~~~~~~~~~~
 ## Copy and pasted code 
