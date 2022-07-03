@@ -80,7 +80,7 @@ proc parseStmt*(s: string): NimNode =
   ## Expects one or more statements. Raises `ValueError` for parsing errors.
   result = parseString(s, cache, conf)
 
-proc strVal*(n: NimNode): string =
+proc strVals*(n: NimNode): string =
   case n.kind
   of nkStrLit..nkTripleStrLit:
     result = n.strVal
