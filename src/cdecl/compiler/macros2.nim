@@ -7,7 +7,8 @@ import compiler/[
   astalgo, modules, passes, condsyms,
   options, llstream, lineinfos, vm,
   modulegraphs, idents, 
-  passaux, scriptconfig, parser
+  passaux, scriptconfig,
+  parser, renderer
 ]
 import utils
 import sems
@@ -92,6 +93,9 @@ proc strVals*(n: NimNode): string =
     result = n.sym.name.s
   else:
     raise newException(Exception, "strVal wrong kind")
+
+proc repr*(n: PNode): string =
+  renderTree(n, {renderNoComments, renderDocComments})
 
 ## ~~~~~~~~~~~~~~~~~~~~
 ## Copy and pasted code 
