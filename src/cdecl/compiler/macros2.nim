@@ -97,28 +97,28 @@ proc strVal*(n: NimNode): string =
 ## Copy and pasted code 
 ## ~~~~~~~~~~~~~~~~~~~~
 
-proc len*(n: PNode): int {.inline.} =
+proc len*(n: NimNode): int {.inline.} =
   result = n.sons.len
 
-proc safeLen*(n: PNode): int {.inline.} =
+proc safeLen*(n: NimNode): int {.inline.} =
   ## works even for leaves.
   if n.kind in {nkNone..nkNilLit}: result = 0
   else: result = n.len
 
-proc safeArrLen*(n: PNode): int {.inline.} =
+proc safeArrLen*(n: NimNode): int {.inline.} =
   ## works for array-like objects (strings passed as openArray in VM).
   if n.kind in {nkStrLit..nkTripleStrLit}: result = n.strVal.len
   elif n.kind in {nkNone..nkFloat128Lit}: result = 0
   else: result = n.len
 
-proc addAllowNil*(father, son: PNode) {.inline.} =
+proc addAllowNil*(father, son: NimNode) {.inline.} =
   father.sons.add(son)
 
-template `[]`*(n: PNode, i: int): PNode = n.sons[i]
-template `[]=`*(n: PNode, i: int; x: PNode) = n.sons[i] = x
+template `[]`*(n: NimNode, i: int): NimNode = n.sons[i]
+template `[]=`*(n: NimNode, i: int; x: NimNode) = n.sons[i] = x
 
-template `[]`*(n: PNode, i: BackwardsIndex): PNode = n[n.len - i.int]
-template `[]=`*(n: PNode, i: BackwardsIndex; x: PNode) = n[n.len - i.int] = x
+template `[]`*(n: NimNode, i: BackwardsIndex): NimNode = n[n.len - i.int]
+template `[]=`*(n: NimNode, i: BackwardsIndex; x: NimNode) = n[n.len - i.int] = x
 
 # proc `==`*(a, b: NimNode): bool {.magic: "EqNimrodNode", noSideEffect.}
 #   ## Compare two Nim nodes. Return true if nodes are structurally
