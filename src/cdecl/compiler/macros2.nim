@@ -7,7 +7,7 @@ import compiler/[
   astalgo, modules, passes, condsyms,
   options, llstream, lineinfos, vm,
   modulegraphs, idents, 
-  passaux, scriptconfig, 
+  passaux, scriptconfig, parser
 ]
 import utils
 import sems
@@ -67,9 +67,10 @@ proc newFloatLitNode*(f: BiggestFloat): NimNode =
   result = newNimNode(nnkFloatLit)
   result.floatVal = f
 
-proc add*(father, son: NimNode) =
+proc add*(father, son: NimNode): NimNode {.discardable.} =
   assert son != nil
   father.sons.add(son)
+  result = father
 
 proc add*(father: NimNode, children: varargs[NimNode]): NimNode {.discardable.} =
   father.sons.add(children)
@@ -84,6 +85,12 @@ proc error*(msg: string, n: NimNode) =
 proc bindSym(id: string): NimNode = 
   let n = ident(id)
   result = semBindSym(context, n)
+
+proc parseStmt*(s: string): NimNode =
+  ## Compiles the passed string to its AST representation.
+  ## Expects one or more statements. Raises `ValueError` for parsing errors.
+  result = parseString(s, cache, conf)
+
 
 ## ~~~~~~~~~~~~~~~~~~~~
 ## Copy and pasted code 
@@ -196,6 +203,7 @@ proc expectLen*(n: NimNode, min, max: int) =
   ## This is useful for writing macros that check its number of arguments.
   if n.len < min or n.len > max:
     error("Expected a node with " & $min & ".." & $max & " children, got " & $n.len, n)
+
 
 proc newCall*(theProc: NimNode, args: varargs[NimNode]): NimNode =
   ## Produces a new call node. `theProc` is the proc that is called with
@@ -505,3 +513,467 @@ proc astGenRepr*(n: NimNode): string {.benign.} =
 
   result = ""
   traverse(result, 0, n)
+
+
+proc newEmptyNode*(): NimNode {.noSideEffect.} =
+  ## Create a new empty node.
+  result = newNimNode(nnkEmpty)
+
+proc newStmtList*(stmts: varargs[NimNode]): NimNode =
+  ## Create a new statement list.
+  result = newNimNode(nnkStmtList).add(stmts)
+
+proc newPar*(exprs: varargs[NimNode]): NimNode =
+  ## Create a new parentheses-enclosed expression.
+  newNimNode(nnkPar).add(exprs)
+
+proc newBlockStmt*(label, body: NimNode): NimNode =
+  ## Create a new block statement with label.
+  return newNimNode(nnkBlockStmt).add(label, body)
+
+proc newBlockStmt*(body: NimNode): NimNode =
+  ## Create a new block: stmt.
+  return newNimNode(nnkBlockStmt).add(newEmptyNode(), body)
+
+proc newVarStmt*(name, value: NimNode): NimNode =
+  ## Create a new var stmt.
+  return newNimNode(nnkVarSection).add(
+    newNimNode(nnkIdentDefs).add(name, newNimNode(nnkEmpty), value))
+
+proc newLetStmt*(name, value: NimNode): NimNode =
+  ## Create a new let stmt.
+  return newNimNode(nnkLetSection).add(
+    newNimNode(nnkIdentDefs).add(name, newNimNode(nnkEmpty), value))
+
+proc newConstStmt*(name, value: NimNode): NimNode =
+  ## Create a new const stmt.
+  newNimNode(nnkConstSection).add(
+    newNimNode(nnkConstDef).add(name, newNimNode(nnkEmpty), value))
+
+proc newAssignment*(lhs, rhs: NimNode): NimNode =
+  return newNimNode(nnkAsgn).add(lhs, rhs)
+
+proc newDotExpr*(a, b: NimNode): NimNode =
+  ## Create new dot expression.
+  ## a.dot(b) -> `a.b`
+  return newNimNode(nnkDotExpr).add(a, b)
+
+proc newColonExpr*(a, b: NimNode): NimNode =
+  ## Create new colon expression.
+  ## newColonExpr(a, b) -> `a: b`
+  newNimNode(nnkExprColonExpr).add(a, b)
+
+proc newIdentDefs*(name, kind: NimNode;
+                   default = newEmptyNode()): NimNode =
+  ## Creates a new `nnkIdentDefs` node of a specific kind and value.
+  ##
+  ## `nnkIdentDefs` need to have at least three children, but they can have
+  ## more: first comes a list of identifiers followed by a type and value
+  ## nodes. This helper proc creates a three node subtree, the first subnode
+  ## being a single identifier name. Both the `kind` node and `default`
+  ## (value) nodes may be empty depending on where the `nnkIdentDefs`
+  ## appears: tuple or object definitions will have an empty `default` node,
+  ## `let` or `var` blocks may have an empty `kind` node if the
+  ## identifier is being assigned a value. Example:
+  ##
+  ## .. code-block:: nim
+  ##
+  ##   var varSection = newNimNode(nnkVarSection).add(
+  ##     newIdentDefs(ident("a"), ident("string")),
+  ##     newIdentDefs(ident("b"), newEmptyNode(), newLit(3)))
+  ##   # --> var
+  ##   #       a: string
+  ##   #       b = 3
+  ##
+  ## If you need to create multiple identifiers you need to use the lower level
+  ## `newNimNode`:
+  ##
+  ## .. code-block:: nim
+  ##
+  ##   result = newNimNode(nnkIdentDefs).add(
+  ##     ident("a"), ident("b"), ident("c"), ident("string"),
+  ##       newStrLitNode("Hello"))
+  newNimNode(nnkIdentDefs).add(name, kind, default)
+
+proc newNilLit*(): NimNode =
+  ## New nil literal shortcut.
+  result = newNimNode(nnkNilLit)
+
+proc last*(node: NimNode): NimNode = node[node.len-1]
+  ## Return the last item in nodes children. Same as `node[^1]`.
+
+
+const
+  RoutineNodes* = {nnkProcDef, nnkFuncDef, nnkMethodDef, nnkDo, nnkLambda,
+                   nnkIteratorDef, nnkTemplateDef, nnkConverterDef, nnkMacroDef}
+  AtomicNodes* = {nnkNone..nnkNilLit}
+  CallNodes* = {nnkCall, nnkInfix, nnkPrefix, nnkPostfix, nnkCommand,
+    nnkCallStrLit, nnkHiddenCallConv}
+
+proc expectKind*(n: NimNode; k: set[NimNodeKind]) =
+  ## Checks that `n` is of kind `k`. If this is not the case,
+  ## compilation aborts with an error message. This is useful for writing
+  ## macros that check the AST that is passed to them.
+  if n.kind notin k: error("Expected one of " & $k & ", got " & $n.kind, n)
+
+proc newProc*(name = newEmptyNode();
+              params: openArray[NimNode] = [newEmptyNode()];
+              body: NimNode = newStmtList();
+              procType = nnkProcDef;
+              pragmas: NimNode = newEmptyNode()): NimNode =
+  ## Shortcut for creating a new proc.
+  ##
+  ## The `params` array must start with the return type of the proc,
+  ## followed by a list of IdentDefs which specify the params.
+  if procType notin RoutineNodes:
+    error("Expected one of " & $RoutineNodes & ", got " & $procType)
+  pragmas.expectKind({nnkEmpty, nnkPragma})
+  result = newNimNode(procType).add(
+    name,
+    newEmptyNode(),
+    newEmptyNode(),
+    newNimNode(nnkFormalParams).add(params),
+    pragmas,
+    newEmptyNode(),
+    body)
+
+proc newIfStmt*(branches: varargs[tuple[cond, body: NimNode]]): NimNode =
+  ## Constructor for `if` statements.
+  ##
+  ## .. code-block:: nim
+  ##
+  ##    newIfStmt(
+  ##      (Ident, StmtList),
+  ##      ...
+  ##    )
+  ##
+  result = newNimNode(nnkIfStmt)
+  if len(branches) < 1:
+    error("If statement must have at least one branch")
+  for i in branches:
+    result.add(newTree(nnkElifBranch, i.cond, i.body))
+
+proc newEnum*(name: NimNode, fields: openArray[NimNode],
+              public, pure: bool): NimNode =
+
+  ## Creates a new enum. `name` must be an ident. Fields are allowed to be
+  ## either idents or EnumFieldDef
+  ##
+  ## .. code-block:: nim
+  ##
+  ##    newEnum(
+  ##      name    = ident("Colors"),
+  ##      fields  = [ident("Blue"), ident("Red")],
+  ##      public  = true, pure = false)
+  ##
+  ##    # type Colors* = Blue Red
+  ##
+
+  expectKind name, nnkIdent
+  if len(fields) < 1:
+    error("Enum must contain at least one field")
+  for field in fields:
+    expectKind field, {nnkIdent, nnkEnumFieldDef}
+
+  let enumBody = newNimNode(nnkEnumTy).add(newEmptyNode()).add(fields)
+  var typeDefArgs = [name, newEmptyNode(), enumBody]
+
+  if public:
+    let postNode = newNimNode(nnkPostfix).add(
+      newIdentNode("*"), typeDefArgs[0])
+
+    typeDefArgs[0] = postNode
+
+  if pure:
+    let pragmaNode = newNimNode(nnkPragmaExpr).add(
+      typeDefArgs[0],
+      add(newNimNode(nnkPragma), newIdentNode("pure")))
+
+    typeDefArgs[0] = pragmaNode
+
+  let
+    typeDef   = add(newNimNode(nnkTypeDef), typeDefArgs)
+    typeSect  = add(newNimNode(nnkTypeSection), typeDef)
+
+  return typeSect
+
+# proc copyChildrenTo*(src, dest: NimNode) =
+#   ## Copy all children from `src` to `dest`.
+#   for i in 0 ..< src.len:
+#     dest.add src[i].copyNimTree
+
+template expectRoutine(node: NimNode) =
+  expectKind(node, RoutineNodes)
+
+proc name*(someProc: NimNode): NimNode =
+  someProc.expectRoutine
+  result = someProc[0]
+  if result.kind == nnkPostfix:
+    if result[1].kind == nnkAccQuoted:
+      result = result[1][0]
+    else:
+      result = result[1]
+  elif result.kind == nnkAccQuoted:
+    result = result[0]
+
+proc `name=`*(someProc: NimNode; val: NimNode) =
+  someProc.expectRoutine
+  if someProc[0].kind == nnkPostfix:
+    someProc[0][1] = val
+  else: someProc[0] = val
+
+proc params*(someProc: NimNode): NimNode =
+  someProc.expectRoutine
+  result = someProc[3]
+proc `params=`* (someProc: NimNode; params: NimNode) =
+  someProc.expectRoutine
+  expectKind(params, nnkFormalParams)
+  someProc[3] = params
+
+proc pragma*(someProc: NimNode): NimNode =
+  ## Get the pragma of a proc type.
+  ## These will be expanded.
+  if someProc.kind == nnkProcTy:
+    result = someProc[1]
+  else:
+    someProc.expectRoutine
+    result = someProc[4]
+proc `pragma=`*(someProc: NimNode; val: NimNode) =
+  ## Set the pragma of a proc type.
+  expectKind(val, {nnkEmpty, nnkPragma})
+  if someProc.kind == nnkProcTy:
+    someProc[1] = val
+  else:
+    someProc.expectRoutine
+    someProc[4] = val
+
+proc addPragma*(someProc, pragma: NimNode) =
+  ## Adds pragma to routine definition.
+  someProc.expectKind(RoutineNodes + {nnkProcTy})
+  var pragmaNode = someProc.pragma
+  if pragmaNode.isNil or pragmaNode.kind == nnkEmpty:
+    pragmaNode = newNimNode(nnkPragma)
+    someProc.pragma = pragmaNode
+  pragmaNode.add(pragma)
+
+template badNodeKind(n, f) =
+  error("Invalid node kind " & $n.kind & " for macros.`" & $f & "`", n)
+
+proc body*(someProc: NimNode): NimNode =
+  case someProc.kind:
+  of RoutineNodes:
+    return someProc[6]
+  of nnkBlockStmt, nnkWhileStmt:
+    return someProc[1]
+  of nnkForStmt:
+    return someProc.last
+  else:
+    badNodeKind someProc, "body"
+
+proc `body=`*(someProc: NimNode, val: NimNode) =
+  case someProc.kind
+  of RoutineNodes:
+    someProc[6] = val
+  of nnkBlockStmt, nnkWhileStmt:
+    someProc[1] = val
+  of nnkForStmt:
+    someProc[len(someProc)-1] = val
+  else:
+    badNodeKind someProc, "body="
+
+proc basename*(a: NimNode): NimNode =
+  ## Pull an identifier from prefix/postfix expressions.
+  case a.kind
+  of nnkIdent: result = a
+  of nnkPostfix, nnkPrefix: result = a[1]
+  of nnkPragmaExpr: result = basename(a[0])
+  else:
+    error("Do not know how to get basename of (" & treeRepr(a) & ")\n" &
+      repr(a), a)
+
+proc `$`*(node: NimNode): string =
+  ## Get the string of an identifier node.
+  case node.kind
+  of nnkPostfix:
+    result = node.basename.strVal & "*"
+  of nnkStrLit..nnkTripleStrLit, nnkCommentStmt, nnkSym, nnkIdent:
+    result = node.strVal
+  of nnkOpenSymChoice, nnkClosedSymChoice:
+    result = $node[0]
+  of nnkAccQuoted:
+    result = $node[0]
+  else:
+    badNodeKind node, "$"
+
+iterator items*(n: NimNode): NimNode {.inline.} =
+  ## Iterates over the children of the NimNode `n`.
+  for i in 0 ..< n.len:
+    yield n[i]
+
+iterator pairs*(n: NimNode): (int, NimNode) {.inline.} =
+  ## Iterates over the children of the NimNode `n` and its indices.
+  for i in 0 ..< n.len:
+    yield (i, n[i])
+
+iterator children*(n: NimNode): NimNode {.inline.} =
+  ## Iterates over the children of the NimNode `n`.
+  for i in 0 ..< n.len:
+    yield n[i]
+
+template findChild*(n: NimNode; cond: untyped): NimNode {.dirty.} =
+  ## Find the first child node matching condition (or nil).
+  ##
+  ## .. code-block:: nim
+  ##   var res = findChild(n, it.kind == nnkPostfix and
+  ##                          it.basename.ident == toNimIdent"foo")
+  block:
+    var res: NimNode
+    for it in n.children:
+      if cond:
+        res = it
+        break
+    res
+
+proc insert*(a: NimNode; pos: int; b: NimNode) =
+  ## Insert node `b` into node `a` at `pos`.
+  if len(a)-1 < pos:
+    # add some empty nodes first
+    for i in len(a)-1..pos-2:
+      a.add newEmptyNode()
+    a.add b
+  else:
+    # push the last item onto the list again
+    # and shift each item down to pos up one
+    a.add(a[a.len-1])
+    for i in countdown(len(a) - 3, pos):
+      a[i + 1] = a[i]
+    a[pos] = b
+
+proc `basename=`*(a: NimNode; val: string) =
+  case a.kind
+  of nnkIdent:
+    a.strVal = val
+  of nnkPostfix, nnkPrefix:
+    a[1] = ident(val)
+  of nnkPragmaExpr: `basename=`(a[0], val)
+  else:
+    error("Do not know how to get basename of (" & treeRepr(a) & ")\n" &
+      repr(a), a)
+
+proc postfix*(node: NimNode; op: string): NimNode =
+  newNimNode(nnkPostfix).add(ident(op), node)
+
+proc prefix*(node: NimNode; op: string): NimNode =
+  newNimNode(nnkPrefix).add(ident(op), node)
+
+proc infix*(a: NimNode; op: string;
+            b: NimNode): NimNode =
+  newNimNode(nnkInfix).add(ident(op), a, b)
+
+proc unpackPostfix*(node: NimNode): tuple[node: NimNode; op: string] =
+  node.expectKind nnkPostfix
+  result = (node[1], $node[0])
+
+proc unpackPrefix*(node: NimNode): tuple[node: NimNode; op: string] =
+  node.expectKind nnkPrefix
+  result = (node[1], $node[0])
+
+proc unpackInfix*(node: NimNode): tuple[left: NimNode; op: string; right: NimNode] =
+  expectKind(node, nnkInfix)
+  result = (node[1], $node[0], node[2])
+
+# proc copy*(node: NimNode): NimNode =
+#   ## An alias for `copyNimTree<#copyNimTree,NimNode>`_.
+#   return node.copyNimTree()
+
+proc expectIdent*(n: NimNode, name: string) =
+  ## Check that `eqIdent(n,name)` holds true. If this is not the
+  ## case, compilation aborts with an error message. This is useful
+  ## for writing macros that check the AST that is passed to them.
+  if not eqIdent(n, name):
+    error("Expected identifier to be `" & name & "` here", n)
+
+proc hasArgOfName*(params: NimNode; name: string): bool =
+  ## Search `nnkFormalParams` for an argument.
+  expectKind(params, nnkFormalParams)
+  for i in 1..<params.len:
+    for j in 0..<params[i].len-2:
+      if name.eqIdent($params[i][j]):
+        return true
+
+proc addIdentIfAbsent*(dest: NimNode, ident: string) =
+  ## Add `ident` to `dest` if it is not present. This is intended for use
+  ## with pragmas.
+  for node in dest.children:
+    case node.kind
+    of nnkIdent:
+      if ident.eqIdent($node): return
+    of nnkExprColonExpr:
+      if ident.eqIdent($node[0]): return
+    else: discard
+  dest.add(ident(ident))
+
+proc boolVal*(n: NimNode): bool =
+  if n.kind == nnkIntLit: n.intVal != 0
+  else: n == bindSym"true" # hacky solution for now
+
+when defined(nimMacrosGetNodeId):
+  proc nodeID*(n: NimNode): int {.magic: "NodeId".}
+    ## Returns the id of `n`, when the compiler has been compiled
+    ## with the flag `-d:useNodeids`, otherwise returns `-1`. This
+    ## proc is for the purpose to debug the compiler only.
+
+proc getSize*(arg: NimNode): int {.magic: "NSizeOf", noSideEffect.} =
+  ## Returns the same result as `system.sizeof` if the size is
+  ## known by the Nim compiler. Returns a negative value if the Nim
+  ## compiler does not know the size.
+proc getAlign*(arg: NimNode): int {.magic: "NSizeOf", noSideEffect.} =
+  ## Returns the same result as `system.alignof` if the alignment
+  ## is known by the Nim compiler. It works on `NimNode` for use
+  ## in macro context. Returns a negative value if the Nim compiler
+  ## does not know the alignment.
+proc getOffset*(arg: NimNode): int {.magic: "NSizeOf", noSideEffect.} =
+  ## Returns the same result as `system.offsetof` if the offset is
+  ## known by the Nim compiler. It expects a resolved symbol node
+  ## from a field of a type. Therefore it only requires one argument
+  ## instead of two. Returns a negative value if the Nim compiler
+  ## does not know the offset.
+
+proc isExported*(n: NimNode): bool {.noSideEffect.} =
+  ## Returns whether the symbol is exported or not.
+
+proc extractDocCommentsAndRunnables*(n: NimNode): NimNode =
+  ## returns a `nnkStmtList` containing the top-level doc comments and
+  ## runnableExamples in `a`, stopping at the first child that is neither.
+  ## Example:
+  ##
+  ## .. code-block:: nim
+  ##  import std/macros
+  ##  macro transf(a): untyped =
+  ##    result = quote do:
+  ##      proc fun2*() = discard
+  ##    let header = extractDocCommentsAndRunnables(a.body)
+  ##    # correct usage: rest is appended
+  ##    result.body = header
+  ##    result.body.add quote do: discard # just an example
+  ##    # incorrect usage: nesting inside a nnkStmtList:
+  ##    # result.body = quote do: (`header`; discard)
+  ##
+  ##  proc fun*() {.transf.} =
+  ##    ## first comment
+  ##    runnableExamples: discard
+  ##    runnableExamples: discard
+  ##    ## last comment
+  ##    discard # first statement after doc comments + runnableExamples
+  ##    ## not docgen'd
+
+  result = newStmtList()
+  for ni in n:
+    case ni.kind
+    of nnkCommentStmt:
+      result.add ni
+    of nnkCall, nnkCommand:
+      if ni[0].kind == nnkIdent and ni[0].eqIdent "runnableExamples":
+        result.add ni
+      else: break
+    else: break
