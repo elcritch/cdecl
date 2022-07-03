@@ -5,12 +5,12 @@ import compiler/[options, modulegraphs, condsyms]
 import compiler/[passes, passaux]
 import compiler/[
   astalgo, modules, passes, condsyms,
-  options, sem, llstream, lineinfos, vm,
-  modulegraphs, idents, semmagic,
-  passaux, scriptconfig, semdata
+  options, llstream, lineinfos, vm,
+  modulegraphs, idents, 
+  passaux, scriptconfig, 
 ]
-
 import utils
+import sems
 
 type
   NimNode* = PNode
@@ -74,16 +74,16 @@ proc add*(father, son: NimNode) =
 proc add*(father: NimNode, children: varargs[NimNode]): NimNode {.discardable.} =
   father.sons.add(children)
 
-proc error*(msg: string, n: NimNode) = 
+proc error*(msg: string) = 
   echo "Warning: ", msg
   quit(1)
 
+proc error*(msg: string, n: NimNode) = 
+  error(msg)
+
 proc bindSym(id: string): NimNode = 
   let n = ident(id)
-  if dynamicBindSym notin context.features:
-    result = semBindSym(context, n)
-  else:
-    result = semDynamicBindSym(context, n)
+  result = semBindSym(context, n)
 
 ## ~~~~~~~~~~~~~~~~~~~~
 ## Copy and pasted code 
@@ -196,12 +196,6 @@ proc expectLen*(n: NimNode, min, max: int) =
   ## This is useful for writing macros that check its number of arguments.
   if n.len < min or n.len > max:
     error("Expected a node with " & $min & ".." & $max & " children, got " & $n.len, n)
-
-proc newTree*(kind: NimNodeKind,
-              children: varargs[NimNode]): NimNode =
-  ## Produces a new node with children.
-  result = newNimNode(kind)
-  result.add(children)
 
 proc newCall*(theProc: NimNode, args: varargs[NimNode]): NimNode =
   ## Produces a new call node. `theProc` is the proc that is called with
@@ -340,19 +334,11 @@ proc newLit*[T](arg: seq[T]): NimNode =
     bindSym"@",
     bracket
   )
-  if arg.len == 0:
-    # add type cast for empty seq
-    var typ = getTypeInst(typeof(arg))[1]
-    result = newCall(typ,result)
 
 proc newLit*[T](s: set[T]): NimNode =
   result = nnkCurly.newTree
   for x in s:
     result.add newLit(x)
-  if result.len == 0:
-    # add type cast for empty set
-    var typ = getTypeInst(typeof(s))[1]
-    result = newCall(typ,result)
 
 proc isNamedTuple(T: typedesc): bool {.magic: "TypeTrait".}
   ## See `typetraits.isNamedTuple`
