@@ -13,7 +13,6 @@ import utils
 import sems
 
 type
-  Indexable = PNode | PType
   NimNode* = PNode
 
 forwardEnums("NimNodeKind", "n", TNodeKind)
@@ -98,7 +97,7 @@ proc strVal*(n: NimNode): string =
 ## Copy and pasted code 
 ## ~~~~~~~~~~~~~~~~~~~~
 
-proc len*(n: Indexable): int {.inline.} =
+proc len*(n: PNode): int {.inline.} =
   result = n.sons.len
 
 proc safeLen*(n: PNode): int {.inline.} =
@@ -112,18 +111,14 @@ proc safeArrLen*(n: PNode): int {.inline.} =
   elif n.kind in {nkNone..nkFloat128Lit}: result = 0
   else: result = n.len
 
-proc add*(father, son: Indexable) =
-  assert son != nil
+proc addAllowNil*(father, son: PNode) {.inline.} =
   father.sons.add(son)
 
-proc addAllowNil*(father, son: Indexable) {.inline.} =
-  father.sons.add(son)
+template `[]`*(n: PNode, i: int): PNode = n.sons[i]
+template `[]=`*(n: PNode, i: int; x: PNode) = n.sons[i] = x
 
-template `[]`*(n: Indexable, i: int): Indexable = n.sons[i]
-template `[]=`*(n: Indexable, i: int; x: Indexable) = n.sons[i] = x
-
-template `[]`*(n: Indexable, i: BackwardsIndex): Indexable = n[n.len - i.int]
-template `[]=`*(n: Indexable, i: BackwardsIndex; x: Indexable) = n[n.len - i.int] = x
+template `[]`*(n: PNode, i: BackwardsIndex): PNode = n[n.len - i.int]
+template `[]=`*(n: PNode, i: BackwardsIndex; x: PNode) = n[n.len - i.int] = x
 
 # proc `==`*(a, b: NimNode): bool {.magic: "EqNimrodNode", noSideEffect.}
 #   ## Compare two Nim nodes. Return true if nodes are structurally
