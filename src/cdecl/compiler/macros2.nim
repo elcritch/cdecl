@@ -35,6 +35,7 @@ template benign*(p: untyped) = p
 
 proc newNimNode*(kind: NimNodeKind): NimNode =
   result = newNode(TNodeKind(kind.ord()))
+  result.kind = kind
 
 proc newTree*(kind: NimNodeKind; children: varargs[NimNode]): NimNode =
   result = ast.newTree(TNodeKind(kind.ord()), children)
@@ -44,19 +45,6 @@ proc ident*(name: string): NimNode =
 
 proc newIdentNode*(name: string): NimNode =
   result = newIdentNode(cache.getIdent(name), unknownLineInfo)
-
-when false:
-  proc getImpl*(node: NimNode): NimNode = 
-    # of opcGetImpl:
-    decodeB(rkNode)
-    var a = regs[rb].node
-    if a.kind == nkVarTy: a = a[0]
-    if a.kind == nkSym:
-      regs[ra].node = if a.sym.ast.isNil: newNode(nkNilLit)
-                      else: copyTree(a.sym.ast)
-      regs[ra].node.flags.incl nfIsRef
-    else:
-      stackTrace(c, tos, pc, "node is not a symbol")
 
 proc newIntLitNode*(i: BiggestInt): NimNode =
   ## Creates an int literal node from `i`.
@@ -68,6 +56,47 @@ proc newFloatLitNode*(f: BiggestFloat): NimNode =
   result = newNimNode(nnkFloatLit)
   result.floatVal = f
 
+proc add*(father, son: NimNode): NimNode {.discardable.} =
+  assert son != nil
+  father.sons.add(son)
+  result = father
+
+proc add*(father: NimNode, children: varargs[NimNode]): NimNode {.discardable.} =
+  father.sons.add(children)
+  result = father
+
+proc error*(msg: string) = 
+  echo "Warning: ", msg
+  quit(1)
+
+proc error*(msg: string, n: NimNode) = 
+  error(msg)
+
+proc bindSym(id: string): NimNode = 
+  let n = ident(id)
+  result = semBindSym(context, n)
+
+proc parseStmt*(s: string): NimNode =
+  ## Compiles the passed string to its AST representation.
+  ## Expects one or more statements. Raises `ValueError` for parsing errors.
+  result = parseString(s, cache, conf)
+
+proc strVal*(n: NimNode): string =
+  case n.kind
+  of nkStrLit..nkTripleStrLit:
+    result = n.strVal
+  of nkCommentStmt:
+    result = n.comment
+  of nkIdent:
+    result = n.ident.s
+  of nkSym:
+    result = n.sym.name.s
+  else:
+    raise newException(Exception, "strVal wrong kind")
+
+## ~~~~~~~~~~~~~~~~~~~~
+## Copy and pasted code 
+## ~~~~~~~~~~~~~~~~~~~~
 
 proc len*(n: Indexable): int {.inline.} =
   result = n.sons.len
@@ -136,35 +165,6 @@ template `or`*(x, y: NimNode): NimNode =
     arg
   else:
     y
-
-proc add*(father, son: NimNode): NimNode {.discardable.} =
-  assert son != nil
-  father.sons.add(son)
-  result = father
-
-proc add*(father: NimNode, children: varargs[NimNode]): NimNode {.discardable.} =
-  father.sons.add(children)
-
-proc error*(msg: string) = 
-  echo "Warning: ", msg
-  quit(1)
-
-proc error*(msg: string, n: NimNode) = 
-  error(msg)
-
-proc bindSym(id: string): NimNode = 
-  let n = ident(id)
-  result = semBindSym(context, n)
-
-proc parseStmt*(s: string): NimNode =
-  ## Compiles the passed string to its AST representation.
-  ## Expects one or more statements. Raises `ValueError` for parsing errors.
-  result = parseString(s, cache, conf)
-
-
-## ~~~~~~~~~~~~~~~~~~~~
-## Copy and pasted code 
-## ~~~~~~~~~~~~~~~~~~~~
 
 proc quote*(bl: typed, op = "``"): NimNode {.magic: "QuoteAst", noSideEffect.} =
   ## Quasi-quoting operator.
@@ -684,7 +684,9 @@ proc expectKind*(n: NimNode; k: set[NimNodeKind]) =
   ## Checks that `n` is of kind `k`. If this is not the case,
   ## compilation aborts with an error message. This is useful for writing
   ## macros that check the AST that is passed to them.
-  if n.kind notin k: error("Expected one of " & $k & ", got " & $n.kind, n)
+  echo "\nEXP: N: ", repr(n)
+  if n.kind notin k:
+    error("Expected one of " & $k & ", got " & $n.kind, n)
 
 proc newProc*(name = newEmptyNode();
               params: openArray[NimNode] = [newEmptyNode()];
@@ -725,7 +727,6 @@ proc newIfStmt*(branches: varargs[tuple[cond, body: NimNode]]): NimNode =
 
 proc newEnum*(name: NimNode, fields: openArray[NimNode],
               public, pure: bool): NimNode =
-
   ## Creates a new enum. `name` must be an ident. Fields are allowed to be
   ## either idents or EnumFieldDef
   ##
@@ -738,10 +739,11 @@ proc newEnum*(name: NimNode, fields: openArray[NimNode],
   ##
   ##    # type Colors* = Blue Red
   ##
-
+  echo "\nnewEnum: NM: ", repr name
+  echo "\nnewEnum: FIELDS: ", repr fields
   expectKind name, nnkIdent
   if len(fields) < 1:
-    error("Enum must contain at least one field")
+    raise newException(Exception, "Enum must contain at least one field")
   for field in fields:
     expectKind field, {nnkIdent, nnkEnumFieldDef}
 
