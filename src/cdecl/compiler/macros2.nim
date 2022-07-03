@@ -683,7 +683,6 @@ proc expectKind*(n: NimNode; k: set[NimNodeKind]) =
   ## Checks that `n` is of kind `k`. If this is not the case,
   ## compilation aborts with an error message. This is useful for writing
   ## macros that check the AST that is passed to them.
-  echo "\nEXP: N: ", repr(n)
   if n.kind notin k:
     error("Expected one of " & $k & ", got " & $n.kind, n)
 
@@ -738,8 +737,6 @@ proc newEnum*(name: NimNode, fields: openArray[NimNode],
   ##
   ##    # type Colors* = Blue Red
   ##
-  echo "\nnewEnum: NM: ", repr name
-  echo "\nnewEnum: FIELDS: ", repr fields
   expectKind name, nnkIdent
   if len(fields) < 1:
     raise newException(Exception, "Enum must contain at least one field")
