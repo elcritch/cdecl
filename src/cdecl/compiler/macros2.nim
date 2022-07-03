@@ -13,6 +13,7 @@ import utils
 import sems
 
 type
+  Indexable = PNode | PType
   NimNode* = PNode
 
 forwardEnums("NimNodeKind", "n", TNodeKind)
@@ -66,6 +67,87 @@ proc newFloatLitNode*(f: BiggestFloat): NimNode =
   ## Creates a float literal node from `f`.
   result = newNimNode(nnkFloatLit)
   result.floatVal = f
+
+
+proc len*(n: Indexable): int {.inline.} =
+  result = n.sons.len
+
+proc safeLen*(n: PNode): int {.inline.} =
+  ## works even for leaves.
+  if n.kind in {nkNone..nkNilLit}: result = 0
+  else: result = n.len
+
+proc safeArrLen*(n: PNode): int {.inline.} =
+  ## works for array-like objects (strings passed as openArray in VM).
+  if n.kind in {nkStrLit..nkTripleStrLit}: result = n.strVal.len
+  elif n.kind in {nkNone..nkFloat128Lit}: result = 0
+  else: result = n.len
+
+proc add*(father, son: Indexable) =
+  assert son != nil
+  father.sons.add(son)
+
+proc addAllowNil*(father, son: Indexable) {.inline.} =
+  father.sons.add(son)
+
+template `[]`*(n: Indexable, i: int): Indexable = n.sons[i]
+template `[]=`*(n: Indexable, i: int; x: Indexable) = n.sons[i] = x
+
+template `[]`*(n: Indexable, i: BackwardsIndex): Indexable = n[n.len - i.int]
+template `[]=`*(n: Indexable, i: BackwardsIndex; x: Indexable) = n[n.len - i.int] = x
+
+# proc `==`*(a, b: NimNode): bool {.magic: "EqNimrodNode", noSideEffect.}
+#   ## Compare two Nim nodes. Return true if nodes are structurally
+#   ## equivalent. This means two independently created nodes can be equal.
+
+proc sameType*(a, b: NimNode): bool {.magic: "SameNodeType", noSideEffect.} =
+  ## Compares two Nim nodes' types. Return true if the types are the same,
+  ## e.g. true when comparing alias with original type.
+  discard
+
+proc len*(n: NimNode): int {.magic: "NLen", noSideEffect.}
+  ## Returns the number of children of `n`.
+
+proc `[]`*(n: NimNode, i: int): NimNode {.magic: "NChild", noSideEffect.}
+  ## Get `n`'s `i`'th child.
+
+proc `[]`*(n: NimNode, i: BackwardsIndex): NimNode = n[n.len - i.int]
+  ## Get `n`'s `i`'th child.
+
+template `^^`(n: NimNode, i: untyped): untyped =
+  (when i is BackwardsIndex: n.len - int(i) else: int(i))
+
+proc `[]`*[T, U: Ordinal](n: NimNode, x: HSlice[T, U]): seq[NimNode] =
+  ## Slice operation for NimNode.
+  ## Returns a seq of child of `n` who inclusive range [n[x.a], n[x.b]].
+  let xa = n ^^ x.a
+  let L = (n ^^ x.b) - xa + 1
+  result = newSeq[NimNode](L)
+  for i in 0..<L:
+    result[i] = n[i + xa]
+
+proc `[]=`*(n: NimNode, i: int, child: NimNode) {.magic: "NSetChild",
+  noSideEffect.}
+  ## Set `n`'s `i`'th child to `child`.
+
+proc `[]=`*(n: NimNode, i: BackwardsIndex, child: NimNode) =
+  ## Set `n`'s `i`'th child to `child`.
+  n[n.len - i.int] = child
+
+template `or`*(x, y: NimNode): NimNode =
+  ## Evaluate `x` and when it is not an empty node, return
+  ## it. Otherwise evaluate to `y`. Can be used to chain several
+  ## expressions to get the first expression that is not empty.
+  ##
+  ## .. code-block:: nim
+  ##
+  ##   let node = mightBeEmpty() or mightAlsoBeEmpty() or fallbackNode
+
+  let arg = x
+  if arg != nil and arg.kind != nnkEmpty:
+    arg
+  else:
+    y
 
 proc add*(father, son: NimNode): NimNode {.discardable.} =
   assert son != nil
