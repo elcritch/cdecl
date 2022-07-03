@@ -100,19 +100,11 @@ template `[]=`*(n: Indexable, i: BackwardsIndex; x: Indexable) = n[n.len - i.int
 #   ## Compare two Nim nodes. Return true if nodes are structurally
 #   ## equivalent. This means two independently created nodes can be equal.
 
-proc sameType*(a, b: NimNode): bool {.magic: "SameNodeType", noSideEffect.} =
-  ## Compares two Nim nodes' types. Return true if the types are the same,
-  ## e.g. true when comparing alias with original type.
-  discard
+# proc sameType*(a, b: NimNode): bool {.magic: "SameNodeType", noSideEffect.} =
+#   ## Compares two Nim nodes' types. Return true if the types are the same,
+#   ## e.g. true when comparing alias with original type.
+#   discard
 
-proc len*(n: NimNode): int {.magic: "NLen", noSideEffect.}
-  ## Returns the number of children of `n`.
-
-proc `[]`*(n: NimNode, i: int): NimNode {.magic: "NChild", noSideEffect.}
-  ## Get `n`'s `i`'th child.
-
-proc `[]`*(n: NimNode, i: BackwardsIndex): NimNode = n[n.len - i.int]
-  ## Get `n`'s `i`'th child.
 
 template `^^`(n: NimNode, i: untyped): untyped =
   (when i is BackwardsIndex: n.len - int(i) else: int(i))
@@ -125,10 +117,6 @@ proc `[]`*[T, U: Ordinal](n: NimNode, x: HSlice[T, U]): seq[NimNode] =
   result = newSeq[NimNode](L)
   for i in 0..<L:
     result[i] = n[i + xa]
-
-proc `[]=`*(n: NimNode, i: int, child: NimNode) {.magic: "NSetChild",
-  noSideEffect.}
-  ## Set `n`'s `i`'th child to `child`.
 
 proc `[]=`*(n: NimNode, i: BackwardsIndex, child: NimNode) =
   ## Set `n`'s `i`'th child to `child`.
