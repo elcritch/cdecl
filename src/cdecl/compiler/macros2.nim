@@ -165,88 +165,88 @@ template `or`*(x, y: NimNode): NimNode =
   else:
     y
 
-proc quote*(bl: typed, op = "``"): NimNode {.magic: "QuoteAst", noSideEffect.} =
-  ## Quasi-quoting operator.
-  ## Accepts an expression or a block and returns the AST that represents it.
-  ## Within the quoted AST, you are able to interpolate NimNode expressions
-  ## from the surrounding scope. If no operator is given, quoting is done using
-  ## backticks. Otherwise, the given operator must be used as a prefix operator
-  ## for any interpolated expression. The original meaning of the interpolation
-  ## operator may be obtained by escaping it (by prefixing it with itself) when used
-  ## as a unary operator:
-  ## e.g. `@` is escaped as `@@`, `&%` is escaped as `&%&%` and so on; see examples.
-  ##
-  ## A custom operator interpolation needs accent quoted (``) whenever it resolves
-  ## to a symbol.
-  ##
-  ## See also `genasts <genasts.html>`_ which avoids some issues with `quote`.
-  runnableExamples:
-    macro check(ex: untyped) =
-      # this is a simplified version of the check macro from the
-      # unittest module.
+# proc quote*(bl: typed, op = "``"): NimNode =
+#   ## Quasi-quoting operator.
+#   ## Accepts an expression or a block and returns the AST that represents it.
+#   ## Within the quoted AST, you are able to interpolate NimNode expressions
+#   ## from the surrounding scope. If no operator is given, quoting is done using
+#   ## backticks. Otherwise, the given operator must be used as a prefix operator
+#   ## for any interpolated expression. The original meaning of the interpolation
+#   ## operator may be obtained by escaping it (by prefixing it with itself) when used
+#   ## as a unary operator:
+#   ## e.g. `@` is escaped as `@@`, `&%` is escaped as `&%&%` and so on; see examples.
+#   ##
+#   ## A custom operator interpolation needs accent quoted (``) whenever it resolves
+#   ## to a symbol.
+#   ##
+#   ## See also `genasts <genasts.html>`_ which avoids some issues with `quote`.
+#   runnableExamples:
+#     macro check(ex: untyped) =
+#       # this is a simplified version of the check macro from the
+#       # unittest module.
 
-      # If there is a failed check, we want to make it easy for
-      # the user to jump to the faulty line in the code, so we
-      # get the line info here:
-      var info = ex.lineinfo
+#       # If there is a failed check, we want to make it easy for
+#       # the user to jump to the faulty line in the code, so we
+#       # get the line info here:
+#       var info = ex.lineinfo
 
-      # We will also display the code string of the failed check:
-      var expString = ex.toStrLit
+#       # We will also display the code string of the failed check:
+#       var expString = ex.toStrLit
 
-      # Finally we compose the code to implement the check:
-      result = quote do:
-        if not `ex`:
-          echo `info` & ": Check failed: " & `expString`
-    check 1 + 1 == 2
+#       # Finally we compose the code to implement the check:
+#       result = quote do:
+#         if not `ex`:
+#           echo `info` & ": Check failed: " & `expString`
+#     check 1 + 1 == 2
 
-  runnableExamples:
-    # example showing how to define a symbol that requires backtick without
-    # quoting it.
-    var destroyCalled = false
-    macro bar() =
-      let s = newTree(nnkAccQuoted, ident"=destroy")
-      # let s = ident"`=destroy`" # this would not work
-      result = quote do:
-        type Foo = object
-        # proc `=destroy`(a: var Foo) = destroyCalled = true # this would not work
-        proc `s`(a: var Foo) = destroyCalled = true
-        block:
-          let a = Foo()
-    bar()
-    doAssert destroyCalled
+#   runnableExamples:
+#     # example showing how to define a symbol that requires backtick without
+#     # quoting it.
+#     var destroyCalled = false
+#     macro bar() =
+#       let s = newTree(nnkAccQuoted, ident"=destroy")
+#       # let s = ident"`=destroy`" # this would not work
+#       result = quote do:
+#         type Foo = object
+#         # proc `=destroy`(a: var Foo) = destroyCalled = true # this would not work
+#         proc `s`(a: var Foo) = destroyCalled = true
+#         block:
+#           let a = Foo()
+#     bar()
+#     doAssert destroyCalled
 
-  runnableExamples:
-    # custom `op`
-    var destroyCalled = false
-    macro bar(ident) =
-      var x = 1.5
-      result = quote("@") do:
-        type Foo = object
-        let `@ident` = 0 # custom op interpolated symbols need quoted (``)
-        proc `=destroy`(a: var Foo) =
-          doAssert @x == 1.5
-          doAssert compiles(@x == 1.5)
-          let b1 = @[1,2]
-          let b2 = @@[1,2]
-          doAssert $b1 == "[1, 2]"
-          doAssert $b2 == "@[1, 2]"
-          destroyCalled = true
-        block:
-          let a = Foo()
-    bar(someident)
-    doAssert destroyCalled
+#   runnableExamples:
+#     # custom `op`
+#     var destroyCalled = false
+#     macro bar(ident) =
+#       var x = 1.5
+#       result = quote("@") do:
+#         type Foo = object
+#         let `@ident` = 0 # custom op interpolated symbols need quoted (``)
+#         proc `=destroy`(a: var Foo) =
+#           doAssert @x == 1.5
+#           doAssert compiles(@x == 1.5)
+#           let b1 = @[1,2]
+#           let b2 = @@[1,2]
+#           doAssert $b1 == "[1, 2]"
+#           doAssert $b2 == "@[1, 2]"
+#           destroyCalled = true
+#         block:
+#           let a = Foo()
+#     bar(someident)
+#     doAssert destroyCalled
 
-    proc `&%`(x: int): int = 1
-    proc `&%`(x, y: int): int = 2
+#     proc `&%`(x: int): int = 1
+#     proc `&%`(x, y: int): int = 2
 
-    macro bar2() =
-      var x = 3
-      result = quote("&%") do:
-        var y = &%x # quoting operator
-        doAssert &%&%y == 1 # unary operator => need to escape
-        doAssert y &% y == 2 # binary operator => no need to escape
-        doAssert y == 3
-    bar2()
+#     macro bar2() =
+#       var x = 3
+#       result = quote("&%") do:
+#         var y = &%x # quoting operator
+#         doAssert &%&%y == 1 # unary operator => need to escape
+#         doAssert y &% y == 2 # binary operator => no need to escape
+#         doAssert y == 3
+#     bar2()
 
 proc expectKind*(n: NimNode, k: NimNodeKind) =
   ## Checks that `n` is of kind `k`. If this is not the case,
@@ -417,8 +417,6 @@ proc newLit*[T](s: set[T]): NimNode =
   for x in s:
     result.add newLit(x)
 
-proc isNamedTuple(T: typedesc): bool {.magic: "TypeTrait".}
-  ## See `typetraits.isNamedTuple`
 
 proc newLit*[T: tuple](arg: T): NimNode =
   ## use -d:nimHasWorkaround14720 to restore behavior prior to PR, forcing
@@ -449,30 +447,89 @@ proc nestList*(op: NimNode; pack: NimNode; init: NimNode): NimNode =
   for i in countdown(pack.len - 1, 0):
     result = newCall(op, pack[i], result)
 
-proc eqIdent*(a: string; b: string): bool {.magic: "EqIdent", noSideEffect.}
-  ## Style insensitive comparison.
+proc eqIdent*(lhs, rhs: NimNode): bool =
+  # decodeBC(rkInt)
+  # aliases for shorter and easier to understand code below
+  var aNode = lhs
+  var bNode = rhs
+  # Skipping both, `nkPostfix` and `nkAccQuoted` for both
+  # arguments.  `nkPostfix` exists only to tag exported symbols
+  # and therefor it can be safely skipped. Nim has no postfix
+  # operator. `nkAccQuoted` is used to quote an identifier that
+  # wouldn't be allowed to use in an unquoted context.
+  if aNode.kind == nkPostfix:
+    aNode = aNode[1]
+  if aNode.kind == nkAccQuoted:
+    aNode = aNode[0]
+  if bNode.kind == nkPostfix:
+    bNode = bNode[1]
+  if bNode.kind == nkAccQuoted:
+    bNode = bNode[0]
+  # These vars are of type `cstring` to prevent unnecessary string copy.
+  var aStrVal: cstring = nil
+  var bStrVal: cstring = nil
+  # extract strVal from argument ``a``
+  case aNode.kind
+  of nkStrLit..nkTripleStrLit:
+    aStrVal = aNode.strVal.cstring
+  of nkIdent:
+    aStrVal = aNode.ident.s.cstring
+  of nkSym:
+    aStrVal = aNode.sym.name.s.cstring
+  of nkOpenSymChoice, nkClosedSymChoice:
+    aStrVal = aNode[0].sym.name.s.cstring
+  else:
+    discard
+  # extract strVal from argument ``b``
+  case bNode.kind
+  of nkStrLit..nkTripleStrLit:
+    bStrVal = bNode.strVal.cstring
+  of nkIdent:
+    bStrVal = bNode.ident.s.cstring
+  of nkSym:
+    bStrVal = bNode.sym.name.s.cstring
+  of nkOpenSymChoice, nkClosedSymChoice:
+    bStrVal = bNode[0].sym.name.s.cstring
+  else:
+    discard
 
-proc eqIdent*(a: NimNode; b: string): bool {.magic: "EqIdent", noSideEffect.}
-  ## Style insensitive comparison.  `a` can be an identifier or a
-  ## symbol. `a` may be wrapped in an export marker
-  ## (`nnkPostfix`) or quoted with backticks (`nnkAccQuoted`),
-  ## these nodes will be unwrapped.
+  result =
+    if aStrVal != nil and bStrVal != nil:
+      idents.cmpIgnoreStyle(aStrVal, bStrVal, high(int)) == 0
+    else:
+      false
 
-proc eqIdent*(a: string; b: NimNode): bool {.magic: "EqIdent", noSideEffect.}
-  ## Style insensitive comparison.  `b` can be an identifier or a
-  ## symbol. `b` may be wrapped in an export marker
-  ## (`nnkPostfix`) or quoted with backticks (`nnkAccQuoted`),
-  ## these nodes will be unwrapped.
+proc eqIdent*(lhs: NimNode, rhs: string): bool =
+  eqIdent(lhs, ident rhs)
+proc eqIdent*(lhs: string, rhs: NimNode): bool =
+  eqIdent(ident lhs, rhs)
+proc eqIdent*(lhs: string, rhs: string): bool =
+  eqIdent(ident lhs, ident rhs)
 
-proc eqIdent*(a: NimNode; b: NimNode): bool {.magic: "EqIdent", noSideEffect.}
-  ## Style insensitive comparison.  `a` and `b` can be an
-  ## identifier or a symbol. Both may be wrapped in an export marker
-  ## (`nnkPostfix`) or quoted with backticks (`nnkAccQuoted`),
-  ## these nodes will be unwrapped.
+# proc eqIdent*(a: string; b: string): bool {.magic: "EqIdent", noSideEffect.}
+#   ## Style insensitive comparison.
+
+# proc eqIdent*(a: NimNode; b: string): bool {.magic: "EqIdent", noSideEffect.}
+#   ## Style insensitive comparison.  `a` can be an identifier or a
+#   ## symbol. `a` may be wrapped in an export marker
+#   ## (`nnkPostfix`) or quoted with backticks (`nnkAccQuoted`),
+#   ## these nodes will be unwrapped.
+
+# proc eqIdent*(a: string; b: NimNode): bool {.magic: "EqIdent", noSideEffect.}
+#   ## Style insensitive comparison.  `b` can be an identifier or a
+#   ## symbol. `b` may be wrapped in an export marker
+#   ## (`nnkPostfix`) or quoted with backticks (`nnkAccQuoted`),
+#   ## these nodes will be unwrapped.
+
+# proc eqIdent*(a: NimNode; b: NimNode): bool {.magic: "EqIdent", noSideEffect.}
+#   ## Style insensitive comparison.  `a` and `b` can be an
+#   ## identifier or a symbol. Both may be wrapped in an export marker
+#   ## (`nnkPostfix`) or quoted with backticks (`nnkAccQuoted`),
+#   ## these nodes will be unwrapped.
 
 const collapseSymChoice = not defined(nimLegacyMacrosCollapseSymChoice)
 
-proc treeTraverse(n: NimNode; res: var string; level = 0; isLisp = false, indented = false) {.benign.} =
+proc treeTraverse(n: NimNode; res: var string; level = 0; isLisp = false, indented = false) =
   if level > 0:
     if indented:
       res.add("\n")
@@ -491,15 +548,15 @@ proc treeTraverse(n: NimNode; res: var string; level = 0; isLisp = false, indent
   case n.kind
   of nnkEmpty, nnkNilLit:
     discard # same as nil node in this representation
-  of nnkCharLit .. nnkInt64Lit:
+  of nkCharLit .. nkInt64Lit:
     res.add(" " & $n.intVal)
-  of nnkFloatLit .. nnkFloat64Lit:
+  of nkFloatLit .. nkFloat64Lit:
     res.add(" " & $n.floatVal)
-  of nnkStrLit .. nnkTripleStrLit, nnkCommentStmt, nnkIdent, nnkSym:
-    res.add(" " & $n.strVal.newLit.repr)
-  of nnkNone:
+  of nkStrLit .. nkTripleStrLit, nnkCommentStmt, nnkIdent, nnkSym:
+    res.add(" " & $n.strVals()) #.newLit.repr)
+  of nkNone:
     assert false
-  elif n.kind in {nnkOpenSymChoice, nnkClosedSymChoice} and collapseSymChoice:
+  elif n.kind in {nkOpenSymChoice, nkClosedSymChoice} and collapseSymChoice:
     res.add(" " & $n.len)
     if n.len > 0:
       var allSameSymName = true
@@ -985,27 +1042,6 @@ proc boolVal*(n: NimNode): bool =
   if n.kind == nnkIntLit: n.intVal != 0
   else: n == bindSym"true" # hacky solution for now
 
-when defined(nimMacrosGetNodeId):
-  proc nodeID*(n: NimNode): int {.magic: "NodeId".}
-    ## Returns the id of `n`, when the compiler has been compiled
-    ## with the flag `-d:useNodeids`, otherwise returns `-1`. This
-    ## proc is for the purpose to debug the compiler only.
-
-proc getSize*(arg: NimNode): int {.magic: "NSizeOf", noSideEffect.} =
-  ## Returns the same result as `system.sizeof` if the size is
-  ## known by the Nim compiler. Returns a negative value if the Nim
-  ## compiler does not know the size.
-proc getAlign*(arg: NimNode): int {.magic: "NSizeOf", noSideEffect.} =
-  ## Returns the same result as `system.alignof` if the alignment
-  ## is known by the Nim compiler. It works on `NimNode` for use
-  ## in macro context. Returns a negative value if the Nim compiler
-  ## does not know the alignment.
-proc getOffset*(arg: NimNode): int {.magic: "NSizeOf", noSideEffect.} =
-  ## Returns the same result as `system.offsetof` if the offset is
-  ## known by the Nim compiler. It expects a resolved symbol node
-  ## from a field of a type. Therefore it only requires one argument
-  ## instead of two. Returns a negative value if the Nim compiler
-  ## does not know the offset.
 
 proc isExported*(n: NimNode): bool {.noSideEffect.} =
   ## Returns whether the symbol is exported or not.
