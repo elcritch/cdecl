@@ -1,4 +1,4 @@
-import macros, tables, strformat, strutils, sequtils
+import macros, typetraits, tables, strformat, strutils, sequtils
 
 macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
   ## Calls `callee` with fields form object `args` unpacked as individual arguments.
@@ -52,9 +52,11 @@ type
     idx*: int
     name*: string
     typ*: NimNode
-    default*: NimNode
 
-proc paramNames(node: NimNode): OrderedTable[string, Param] = 
+proc getBaseType(fparam: Param): NimNode =
+  result = fparam.typ.getTypeImpl()
+
+proc fnParamNames(node: NimNode): OrderedTable[string, Param] = 
   ## get all parameters from `FormalParams` in easy form
   node.expectKind nnkFormalParams
   var idx = 0
@@ -62,10 +64,9 @@ proc paramNames(node: NimNode): OrderedTable[string, Param] =
     let
       nms = paramNode[0..<paramNode.len() - 2]
       tp = paramNode[^2]
-      df = paramNode[^1]
     for nm in nms:
       let n = nm.strVal
-      result[n] = Param(idx: idx, name: n, typ: tp, default: df)
+      result[n] = Param(idx: idx, name: n, typ: tp)
       idx.inc
 
 proc processLabel(
@@ -78,6 +79,7 @@ proc processLabel(
     lname = labelArg[0].strVal
     lstmt = labelArg[1]
     fparam = fnParams[lname]
+    fparamTyp = fparam.getBaseType()
   
   if lstmt.kind == nnkDo:
     let doFmlParam = params(lstmt)
@@ -91,15 +93,15 @@ proc processLabel(
         let fn = `plambda`
         fn
     varList[fparam.idx] = (fparam.name, pstmt)
-  elif fparam.typ.kind == nnkProcTy:
-    if fparam.typ[0].len() > 1:
+  elif fparamTyp.kind == nnkProcTy:
+    if fparamTyp[0].len() > 1:
       ## print error in corner case of anonymous proc with args
-      let fsyntax = fparam.typ[0].repr.replace("):",") ->")
+      let fsyntax = fparamTyp[0].repr.replace("):",") ->")
       var msg = &"label `{lname}` is an anonymous proc that"
       msg &= &" takes one or more arguments."
       msg &= &" Please use the do call syntax: \n"
       msg &= &"\t{lname} do {fsyntax} "
-      error(msg)
+      error(msg, fparam.typ)
 
     var pstmt = quote do:
       let fn: proc (): string =
@@ -107,14 +109,19 @@ proc processLabel(
           result = "test"
       fn
     
+    # find our new lambda...
+    var lambda = pstmt[0][0][1]
+    lambda.pragma= fparamTyp.pragma
+    pstmt.copyLineInfo(lstmt)
+
     var
       letSect = pstmt[0]
       idDefs = letSect[0]
       procTy = idDefs[1]
       lamDef = idDefs[2]
 
-    procTy[0]= fparam.typ[0]
-    lamDef.params= fparam.typ[0]
+    procTy[0]= fparam.getBaseType()[0]
+    lamDef.params= fparam.getBaseType()[0]
     lamDef.body= lstmt
 
     varList[fparam.idx] = (fparam.name, pstmt)
@@ -152,8 +159,10 @@ macro unpackLabelsAsArgs*(
       b: 22
   
   args.expectKind nnkArgList
-  let fnImpl = getImpl(callee)
-  let fnParams = fnImpl.params().paramNames()
+  let fnImpl = getTypeImpl(callee)
+
+  fnImpl.expectKind(nnkProcTy)
+  let fnParams = fnImpl[0].fnParamNames()
   let fnIdxParams = fnParams.pairs().toSeq()
 
   ## parse out params in various formats
@@ -164,7 +173,10 @@ macro unpackLabelsAsArgs*(
       for labelArg in arg:
         # handle `label` or `property` arg
         idx = -1
-        varList.processLabel(fnParams, labelArg)
+        try:
+          varList.processLabel(fnParams, labelArg)
+        except KeyError:
+          error(fmt"missing argument for label: {labelArg.repr}", labelArg)
     elif arg.kind == nnkExprEqExpr:
       # handle regular named parameters
       let
@@ -185,12 +197,15 @@ macro unpackLabelsAsArgs*(
   #   echo "fnIdxParams: v: ", v.repr 
 
   result = newCall(callee)
+  result.copyLineInfo(args[0])
   for idx, (nm, vl) in varList.pairs():
     let fname = fnIdxParams[idx][0]
-    # echo "fname: ", fname
     if nm == "":
       result.add nnkExprEqExpr.newTree(ident fname, vl)
     else:
       result.add nnkExprEqExpr.newTree(ident nm, vl)
+
+  # echo "repr: "
+  # echo repr result
 
 
