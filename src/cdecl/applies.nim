@@ -1,4 +1,4 @@
-import macros, tables, strformat, strutils, sequtils
+import macros, typetraits, tables, strformat, strutils, sequtils
 
 macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
   ## Calls `callee` with fields form object `args` unpacked as individual arguments.
@@ -54,18 +54,29 @@ type
     typ*: NimNode
     default*: NimNode
 
-proc paramNames(node: NimNode): OrderedTable[string, Param] = 
+proc getBaseType(fparam: Param): NimNode =
+  result = fparam.typ.getTypeImpl()
+
+proc fnParamNames(node: NimNode): OrderedTable[string, Param] = 
   ## get all parameters from `FormalParams` in easy form
   node.expectKind nnkFormalParams
   var idx = 0
+  echo "paramNodes: ", treeRepr node
   for paramNode in node[1..^1]:
     let
       nms = paramNode[0..<paramNode.len() - 2]
       tp = paramNode[^2]
-      df = paramNode[^1]
+      default = paramNode[^1]
+      resolvedTp = 
+        if tp.kind == nnkEmpty:
+          # figure out the type from default kind
+          echo "FNPARAMS:tp: ", node.getTypeImpl().repr
+          tp
+        else:
+          tp
     for nm in nms:
       let n = nm.strVal
-      result[n] = Param(idx: idx, name: n, typ: tp, default: df)
+      result[n] = Param(idx: idx, name: n, typ: tp, default: default)
       idx.inc
 
 proc processLabel(
@@ -79,6 +90,9 @@ proc processLabel(
     lstmt = labelArg[1]
     fparam = fnParams[lname]
   
+  echo "fparam:type: ", repr fparam.name, " ", repr fparam.typ, " kd: ", repr fparam.typ.kind
+  echo "nameproc: ", treerepr fparam.getBaseType()
+
   if lstmt.kind == nnkDo:
     let doFmlParam = params(lstmt)
     let doBody = body(lstmt)
@@ -152,8 +166,10 @@ macro unpackLabelsAsArgs*(
       b: 22
   
   args.expectKind nnkArgList
-  let fnImpl = getImpl(callee)
-  let fnParams = fnImpl.params().paramNames()
+  let fnImpl = getTypeImpl(callee)
+  echo "TP IMPL: ", treerepr fnImpl
+  fnImpl.expectKind(nnkProcTy)
+  let fnParams = fnImpl[0].fnParamNames()
   let fnIdxParams = fnParams.pairs().toSeq()
 
   ## parse out params in various formats
