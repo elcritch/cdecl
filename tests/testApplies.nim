@@ -187,7 +187,7 @@ suite "unpack labels":
       name:
         echo "running func..."
         "fizzy"
-      a: 11
+      a: 23.3
       b: 22
 
   test "test with anonymous proc var":
