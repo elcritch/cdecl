@@ -67,9 +67,11 @@ suite "unpack labels":
     
     type
       NameProc = proc (): string {.nimcall.}
+      NameClosure = proc (): string {.closure.}
     
-    proc fizzy(name: NameProc, a, b: int) =
+    proc fizzy(name: NameClosure, a, b: int) =
       # echo name(), ":", " a: ", $a, " b: ", $b
+      # check id() == "fuzzy"
       check name() == "fizzy"
       wasRun = true
       totalValue = a + b
@@ -174,16 +176,19 @@ suite "unpack labels":
       a: 11
       b: 22
 
-  # test "test with special case named empty proc":
-  #   template fizzyCall(blk: varargs[untyped]) =
-  #     unpackLabelsAsArgs(fizzy, blk)
+  test "test with special case named empty proc":
+    template fizzyCall(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(fizzy, blk)
     
-  #   fizzyCall:
-  #     name:
-  #       echo "running func..."
-  #       "fizzy"
-  #     a: 11
-  #     b: 22
+    fizzyCall:
+      id:
+        echo "running func..."
+        "fuzzy"
+      name:
+        echo "running func..."
+        "fizzy"
+      a: 11
+      b: 22
 
   test "test with anonymous proc var":
     template Fizz(blk: varargs[untyped]) =

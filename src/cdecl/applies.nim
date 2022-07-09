@@ -105,10 +105,10 @@ proc processLabel(
         let fn = `plambda`
         fn
     varList[fparam.idx] = (fparam.name, pstmt)
-  elif fparam.typ.kind == nnkProcTy:
-    if fparam.typ[0].len() > 1:
+  elif fparam.getBaseType().kind == nnkProcTy:
+    if fparam.getBaseType()[0].len() > 1:
       ## print error in corner case of anonymous proc with args
-      let fsyntax = fparam.typ[0].repr.replace("):",") ->")
+      let fsyntax = fparam.getBaseType()[0].repr.replace("):",") ->")
       var msg = &"label `{lname}` is an anonymous proc that"
       msg &= &" takes one or more arguments."
       msg &= &" Please use the do call syntax: \n"
@@ -127,8 +127,8 @@ proc processLabel(
       procTy = idDefs[1]
       lamDef = idDefs[2]
 
-    procTy[0]= fparam.typ[0]
-    lamDef.params= fparam.typ[0]
+    procTy[0]= fparam.getBaseType()[0]
+    lamDef.params= fparam.getBaseType()[0]
     lamDef.body= lstmt
 
     varList[fparam.idx] = (fparam.name, pstmt)
@@ -167,6 +167,7 @@ macro unpackLabelsAsArgs*(
   
   args.expectKind nnkArgList
   let fnImpl = getTypeImpl(callee)
+
   echo "TP IMPL: ", treerepr fnImpl
   fnImpl.expectKind(nnkProcTy)
   let fnParams = fnImpl[0].fnParamNames()
@@ -180,7 +181,10 @@ macro unpackLabelsAsArgs*(
       for labelArg in arg:
         # handle `label` or `property` arg
         idx = -1
-        varList.processLabel(fnParams, labelArg)
+        try:
+          varList.processLabel(fnParams, labelArg)
+        except KeyError:
+          error(fmt"missing argument for label: {labelArg.repr}", labelArg)
     elif arg.kind == nnkExprEqExpr:
       # handle regular named parameters
       let
@@ -197,8 +201,8 @@ macro unpackLabelsAsArgs*(
   assert varList.hasKey(-1) == false ## not possible
 
   # generate actual function call
-  # for v in fnIdxParams:
-  #   echo "fnIdxParams: v: ", v.repr 
+  for v in fnIdxParams:
+    echo "fnIdxParams: v: ", v.repr 
 
   result = newCall(callee)
   for idx, (nm, vl) in varList.pairs():
@@ -208,5 +212,8 @@ macro unpackLabelsAsArgs*(
       result.add nnkExprEqExpr.newTree(ident fname, vl)
     else:
       result.add nnkExprEqExpr.newTree(ident nm, vl)
+
+  echo "repr: "
+  echo repr result
 
 
