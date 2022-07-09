@@ -69,9 +69,9 @@ suite "unpack labels":
       NameProc = proc (): string {.nimcall.}
       NameClosure = proc (): string {.closure.}
     
-    proc fizzy(name: NameClosure, a, b: int) =
+    proc fizzy(name: NameClosure, id: NameProc, a, b: int) =
       # echo name(), ":", " a: ", $a, " b: ", $b
-      # check id() == "fuzzy"
+      check id() == "fuzzy"
       check name() == "fizzy"
       wasRun = true
       totalValue = a + b
