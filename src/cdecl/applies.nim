@@ -176,6 +176,7 @@ macro unpackLabelsAsArgs*(
       b: 22
   
   args.expectKind nnkArgList
+  echo "FNIMPL: ", callee.treeRepr
   let fnImpl = getTypeImpl(callee)
 
   fnImpl.expectKind(nnkProcTy)
@@ -193,7 +194,7 @@ macro unpackLabelsAsArgs*(
         try:
           varList.processLabel(fnParams, labelArg)
         except KeyError:
-          error(fmt"missing argument for label: {labelArg.repr}", labelArg)
+          error(fmt"label argument `{labelArg[0].repr}` not found in proc arguments list. Options are: {fnParams.keys().toSeq.repr}", labelArg[0])
     elif arg.kind == nnkExprEqExpr:
       # handle regular named parameters
       let
