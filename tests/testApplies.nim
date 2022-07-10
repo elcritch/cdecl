@@ -1,4 +1,5 @@
 import unittest
+import strutils
 import cdecl/applies
 
 {.push hint[XDeclaredButNotUsed](off).}
@@ -111,6 +112,23 @@ suite "unpack labels":
       name: "buzz"
       a: 11
       b: 22
+    
+  test "test transofrm basic":
+    ## basic fooBar call
+    ## 
+    let removeWiths {.compileTime.} =
+      proc (code: (string, NimNode)): (string, NimNode) = 
+        if code[0].startsWith("with"):
+          result = (code[0][4..^1].toLower(), code[1])
+        else:
+          result = code
+    template Foo(blk: varargs[untyped]) =
+      removeWiths.unpackLabelsAsArgsWithFn(foo, blk)
+    
+    Foo:
+      name: "buzz"
+      withA: 11
+      withB: 22
     
   test "test with pos arg":
     fooBar("buzz"):

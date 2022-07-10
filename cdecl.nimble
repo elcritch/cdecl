@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.5.8"
+version       = "0.5.9"
 author        = "Jaremy Creechley"
 description   = "Nim helper for using C Macros"
 license       = "MIT"

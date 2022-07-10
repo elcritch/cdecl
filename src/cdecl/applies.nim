@@ -123,12 +123,11 @@ proc processLambda(
 proc processLabel(
     varList: var OrderedTable[int, (string, NimNode)],
     fnParams: OrderedTable[string, Param],
-    labelArg: NimNode,
+    lcode: (string, NimNode),
 ) =
-  labelArg.expectKind nnkCall
   let
-    lname = labelArg[0].strVal
-    lstmt = labelArg[1]
+    lname = lcode[0]
+    lstmt = lcode[1]
     fparam = fnParams[lname]
     fparamTyp = fparam.getBaseType()
   
@@ -139,10 +138,18 @@ proc processLabel(
   else:
     varList[fparam.idx] = (fparam.name, lstmt)
 
-macro unpackLabelsAsArgs*(
-    callee: typed;
-    args: varargs[untyped]
-): untyped =
+type
+  LabelTransformer* = proc (code: (string, NimNode)): (string, NimNode)
+
+let noTransforms {.compileTime.} =
+  proc (code: (string, NimNode)): (string, NimNode) = 
+    result = code
+
+proc unpackLabelsImpl*(
+    transformer: LabelTransformer,
+    callee: NimNode,
+    args: NimNode
+): NimNode {.compileTime.} =
   ## unpacks 'labels' as named arguments. Labels are 
   ## created using the Nim `command`, `call`, `do`, and
   ## `name parameter` syntaxes. 
@@ -176,7 +183,6 @@ macro unpackLabelsAsArgs*(
       b: 22
   
   args.expectKind nnkArgList
-  echo "FNIMPL: ", callee.treeRepr
   let fnImpl = getTypeImpl(callee)
 
   fnImpl.expectKind(nnkProcTy)
@@ -189,16 +195,19 @@ macro unpackLabelsAsArgs*(
   for arg in args:
     if arg.kind == nnkStmtList:
       for labelArg in arg:
-        # handle `label` or `property` arg
+        # handle `label` args
+        labelArg.expectKind nnkCall
         idx = -1
+        let
+          rcode = (labelArg[0].strVal, labelArg[1])
+          lcode = transformer(rcode)
         try:
-          varList.processLabel(fnParams, labelArg)
+          varList.processLabel(fnParams, lcode)
         except KeyError:
-          error(fmt"label argument `{labelArg[0].repr}` not found in proc arguments list. Options are: {fnParams.keys().toSeq.repr}", labelArg[0])
+          error(fmt"label argument `{lcode[0]}` not found in proc arguments list. Options are: {fnParams.keys().toSeq().repr}", labelArg[0])
     elif arg.kind == nnkExprEqExpr:
       # handle regular named parameters
-      let
-        lname = arg[0].strVal
+      let lname = arg[0].strVal
       varList[idx] = (lname, arg[1])
       idx.inc
     else:
@@ -226,4 +235,16 @@ macro unpackLabelsAsArgs*(
   # echo "repr: "
   # echo repr result
 
+macro unpackLabelsAsArgsWithFn*(
+    transforms: static[LabelTransformer];
+    callee: typed,
+    args: varargs[untyped]
+): untyped =
+  result = unpackLabelsImpl(transforms, callee, args)
+
+macro unpackLabelsAsArgs*(
+    callee: typed;
+    args: varargs[untyped]
+): untyped =
+  result = unpackLabelsImpl(noTransforms, callee, args)
 
