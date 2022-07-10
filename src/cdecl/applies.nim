@@ -79,6 +79,47 @@ iterator attributes*(blk: NimNode): (int, tuple[name: string, code: NimNode]) =
       else:
         yield (idx, (name: name, code: item[1]))
 
+proc processLambda(
+    lname: string,
+    lstmt: NimNode,
+    fparam: Param,
+    fparamTyp: NimNode,
+): NimNode =
+  if lstmt.kind != nnkDo and fparamTyp[0].len() > 1:
+    ## print error in corner case of anonymous proc with args
+    let fsyntax = fparamTyp[0].repr.replace("):",") ->")
+    var msg = &"label `{lname}` is an anonymous proc that"
+    msg &= &" takes one or more arguments."
+    msg &= &" Please use the do call syntax: \n"
+    msg &= &"\t{lname} do {fsyntax} "
+    error(msg, fparam.typ)
+
+  var pstmt = quote do:
+    let fn: proc (): string =
+      proc (): string =
+        result = "test"
+    fn
+  
+  # find our new lambda...
+  var
+    letSect = pstmt[0]
+    idDefs = letSect[0]
+    procTy = idDefs[1]
+    lamDef = idDefs[2]
+
+  pstmt.copyLineInfo(lstmt)
+  procTy[0]= fparam.getBaseType()[0]
+  procTy.pragma= fparamTyp.pragma
+
+  if lstmt.kind == nnkDo:
+    lamDef.params= params(lstmt)
+    lamDef.body= body(lstmt)
+  else:
+    lamDef.params= fparam.getBaseType()[0]
+    lamDef.body= lstmt
+  
+  result = pstmt
+
 proc processLabel(
     varList: var OrderedTable[int, (string, NimNode)],
     fnParams: OrderedTable[string, Param],
@@ -91,40 +132,9 @@ proc processLabel(
     fparam = fnParams[lname]
     fparamTyp = fparam.getBaseType()
   
+  # lambda's require specialized handling to work reliably
   if fparamTyp.kind == nnkProcTy:
-    if lstmt.kind != nnkDo and fparamTyp[0].len() > 1:
-      ## print error in corner case of anonymous proc with args
-      let fsyntax = fparamTyp[0].repr.replace("):",") ->")
-      var msg = &"label `{lname}` is an anonymous proc that"
-      msg &= &" takes one or more arguments."
-      msg &= &" Please use the do call syntax: \n"
-      msg &= &"\t{lname} do {fsyntax} "
-      error(msg, fparam.typ)
-
-    var pstmt = quote do:
-      let fn: proc (): string =
-        proc (): string =
-          result = "test"
-      fn
-    
-    # find our new lambda...
-    var
-      letSect = pstmt[0]
-      idDefs = letSect[0]
-      procTy = idDefs[1]
-      lamDef = idDefs[2]
-
-    pstmt.copyLineInfo(lstmt)
-    procTy[0]= fparam.getBaseType()[0]
-    procTy.pragma= fparamTyp.pragma
-
-    if lstmt.kind == nnkDo:
-      lamDef.params= params(lstmt)
-      lamDef.body= body(lstmt)
-    else:
-      lamDef.params= fparam.getBaseType()[0]
-      lamDef.body= lstmt
-
+    let pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
     varList[fparam.idx] = (fparam.name, pstmt)
   else:
     varList[fparam.idx] = (fparam.name, lstmt)
@@ -133,7 +143,13 @@ macro unpackLabelsAsArgs*(
     callee: typed;
     args: varargs[untyped]
 ): untyped =
-  ## unpacks labels as named arguments. 
+  ## unpacks 'labels' as named arguments. Labels are 
+  ## created using the Nim `command`, `call`, `do`, and
+  ## `name parameter` syntaxes. 
+  ## 
+  ## This lets you write create templates that look
+  ## like YAML type code. 
+  ## 
   runnableExamples:
     proc foo(name: string = "buzz", a, b: int) =
       echo name, ":", " a: ", $a, " b: ", $b
