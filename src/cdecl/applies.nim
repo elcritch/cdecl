@@ -85,27 +85,14 @@ proc processLabel(
     labelArg: NimNode,
 ) =
   labelArg.expectKind nnkCall
-  echo "PROC LABEL: ", labelArg[1].treeRepr
   let
     lname = labelArg[0].strVal
     lstmt = labelArg[1]
     fparam = fnParams[lname]
     fparamTyp = fparam.getBaseType()
   
-  if lstmt.kind == nnkDo:
-    let doFmlParam = params(lstmt)
-    let doBody = body(lstmt)
-    let plet = quote do:
-        let x = proc () = discard
-    let plambda = plet[0][^1]
-    plambda.params= doFmlParam
-    plambda.body= doBody
-    let pstmt = quote do:
-        let fn = `plambda`
-        fn
-    varList[fparam.idx] = (fparam.name, pstmt)
-  elif fparamTyp.kind == nnkProcTy:
-    if fparamTyp[0].len() > 1:
+  if fparamTyp.kind == nnkProcTy:
+    if lstmt.kind != nnkDo and fparamTyp[0].len() > 1:
       ## print error in corner case of anonymous proc with args
       let fsyntax = fparamTyp[0].repr.replace("):",") ->")
       var msg = &"label `{lname}` is an anonymous proc that"
@@ -130,8 +117,13 @@ proc processLabel(
     pstmt.copyLineInfo(lstmt)
     procTy[0]= fparam.getBaseType()[0]
     procTy.pragma= fparamTyp.pragma
-    lamDef.params= fparam.getBaseType()[0]
-    lamDef.body= lstmt
+
+    if lstmt.kind == nnkDo:
+      lamDef.params= params(lstmt)
+      lamDef.body= body(lstmt)
+    else:
+      lamDef.params= fparam.getBaseType()[0]
+      lamDef.body= lstmt
 
     varList[fparam.idx] = (fparam.name, pstmt)
   else:
