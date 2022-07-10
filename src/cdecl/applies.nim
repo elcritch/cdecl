@@ -69,15 +69,15 @@ proc fnParamNames(node: NimNode): OrderedTable[string, Param] =
       result[n] = Param(idx: idx, name: n, typ: tp)
       idx.inc
 
-iterator attributes*(blk: NimNode): (int, tuple[name: string, code: NimNode]) =
-  for idx, item in blk:
-    if item.kind == nnkStmtList:
-      var name = item[0].repr
-      if item.len() > 2:
-        let code = newStmtList(item[1..^1])
-        yield (idx, (name: name, code: code))
-      else:
-        yield (idx, (name: name, code: item[1]))
+# iterator attributes*(blk: NimNode): (int, tuple[name: string, code: NimNode]) =
+#   for idx, item in blk:
+#     if item.kind == nnkStmtList:
+#       var name = item[0].repr
+#       if item.len() > 2:
+#         let code = newStmtList(item[1..^1])
+#         yield (idx, (name: name, code: code))
+#       else:
+#         yield (idx, (name: name, code: item[1]))
 
 proc processLambda(
     lname: string,
