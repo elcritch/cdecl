@@ -69,12 +69,23 @@ proc fnParamNames(node: NimNode): OrderedTable[string, Param] =
       result[n] = Param(idx: idx, name: n, typ: tp)
       idx.inc
 
+iterator attributes*(blk: NimNode): (int, tuple[name: string, code: NimNode]) =
+  for idx, item in blk:
+    if item.kind == nnkStmtList:
+      var name = item[0].repr
+      if item.len() > 2:
+        let code = newStmtList(item[1..^1])
+        yield (idx, (name: name, code: code))
+      else:
+        yield (idx, (name: name, code: item[1]))
+
 proc processLabel(
     varList: var OrderedTable[int, (string, NimNode)],
     fnParams: OrderedTable[string, Param],
     labelArg: NimNode,
 ) =
   labelArg.expectKind nnkCall
+  echo "PROC LABEL: ", labelArg[1].treeRepr
   let
     lname = labelArg[0].strVal
     lstmt = labelArg[1]
@@ -110,17 +121,15 @@ proc processLabel(
       fn
     
     # find our new lambda...
-    var lambda = pstmt[0][0][1]
-    lambda.pragma= fparamTyp.pragma
-    pstmt.copyLineInfo(lstmt)
-
     var
       letSect = pstmt[0]
       idDefs = letSect[0]
       procTy = idDefs[1]
       lamDef = idDefs[2]
 
+    pstmt.copyLineInfo(lstmt)
     procTy[0]= fparam.getBaseType()[0]
+    procTy.pragma= fparamTyp.pragma
     lamDef.params= fparam.getBaseType()[0]
     lamDef.body= lstmt
 
