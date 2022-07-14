@@ -208,7 +208,8 @@ proc unpackLabelsImpl*(
     elif arg.kind == nnkExprEqExpr:
       # handle regular named parameters
       let lname = arg[0].strVal
-      varList[idx] = (lname, arg[1])
+      let fp = fnParams[lname]
+      varList[fp.idx] = (fp.name, arg[1])
       idx.inc
     else:
       # handle basic types like strlit or intlit
@@ -222,6 +223,8 @@ proc unpackLabelsImpl*(
   # generate actual function call
   # for v in fnIdxParams:
   #   echo "fnIdxParams: v: ", v.repr 
+  # for idx, (nm, vl) in varList.pairs():
+  #   echo "varList: v: ", (nm, vl).repr()
 
   result = newCall(callee)
   result.copyLineInfo(args[0])

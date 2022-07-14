@@ -143,6 +143,12 @@ suite "unpack labels":
     fooBar("buzz", a = 11):
       b: 22
     
+  test "test with named args unordered":
+    static:
+      echo "TEST"
+    fooBar("buzz", b = 22):
+      a: 11
+    
   test "test with block label":
     fooBar:
       name: "buzz"
