@@ -203,6 +203,9 @@ proc unpackLabelsImpl*(
   let fnParams = fnImpl[0].fnParamNames()
   let fnIdxParams = fnParams.pairs().toSeq()
 
+  if format == AssignsFmt:
+    echo "ARG:NAMES: ", fnParams.keys().toSeq().repr
+
   ## parse out params in various formats
   var varList: OrderedTable[int, (string, NimNode)]
   var idx = 0
@@ -210,14 +213,18 @@ proc unpackLabelsImpl*(
     if arg.kind == nnkStmtList:
       for labelArg in arg:
         # handle `label` args
-        echo "ARG: ", labelArg.treeRepr
         case format:
         of LabelFmt: labelArg.expectKind nnkCall
-        of AssignsFmt: labelArg.expectKind nnkAsgn
+        of AssignsFmt:
+          labelArg.expectKind nnkAsgn
+          echo "ARG: ", labelArg.treeRepr
 
         idx = -1
         let
           rcode = (labelArg[0].strVal, labelArg[1])
+        if format == AssignsFmt:
+          echo "RCODE: ", rcode.repr
+        let
           lcode = transformer(rcode)
         try:
           varList.processLabel(fnParams, lcode, format)

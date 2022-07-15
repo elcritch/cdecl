@@ -113,7 +113,7 @@ suite "unpack labels":
       a: 11
       b: 22
     
-  test "test transofrm basic":
+  test "test transform basic":
     ## basic fooBar call
     ## 
     let removeWiths {.compileTime.} =
@@ -324,17 +324,18 @@ suite "unpack args as lines":
       a = 11
       b = 22
     
-  test "test transofrm basic":
+  test "test transform basic":
     ## basic fooBar call
     ## 
     let removeWiths {.compileTime.} =
       proc (code: (string, NimNode)): (string, NimNode) = 
+        echo "removeWiths: ", code.repr
         if code[0].startsWith("with"):
           result = (code[0][4..^1].toLower(), code[1])
         else:
           result = code
     template Foo(blk: varargs[untyped]) =
-      removeWiths.unpackBlockArgs(foo, blk)
+      removeWiths.unpackBlockArgsWithFn(foo, blk)
     
     Foo:
       name = "buzz"
@@ -411,39 +412,37 @@ suite "unpack args as lines":
       a = 11
       b = 22
 
-  test "test with special case named empty proc":
-    template fizzyCall(blk: varargs[untyped]) =
-      unpackBlockArgs(fizzy, blk)
-    
-    fizzyCall:
-      id =
-        echo "running func..."
-        "fuzzy"
-      name =
-        echo "running func..."
-        "fizzy"
-      a = 11
-      b = 22
+  # test "test with special case named empty proc":
+  #   template fizzyCall(blk: varargs[untyped]) =
+  #     unpackBlockArgs(fizzy, blk)
+  #   fizzyCall:
+  #     id =
+  #       echo "running func..."
+  #       "fuzzy"
+  #     name =
+  #       echo "running func..."
+  #       "fizzy"
+  #     a = 11
+  #     b = 22
 
-  test "test with anonymous proc var":
-    template Fizz(blk: varargs[untyped]) =
-      unpackBlockArgs(fizz, blk)
-    
-    let fn = proc (): string = "fizzy"
-    Fizz:
-      name: fn()
-      a: 11
-      b: 22
+  # test "test with anonymous proc var":
+  #   template Fizz(blk: varargs[untyped]) =
+  #     unpackBlockArgs(fizz, blk)
+  #   let fn = proc (): string = "fizzy"
+  #   Fizz:
+  #     name: fn()
+  #     a: 11
+  #     b: 22
 
-  test "test with special case empty proc":
-    template fizzCall(blk: varargs[untyped]) =
-      unpackBlockArgs(fizz, blk)
-    fizzCall:
-      name do () -> string:
-        # echo "running func..."
-        "fizzy"
-      a: 11
-      b: 22
+  # test "test with special case empty proc":
+  #   template fizzCall(blk: varargs[untyped]) =
+  #     unpackBlockArgs(fizz, blk)
+  #   fizzCall:
+  #     name do () -> string:
+  #       # echo "running func..."
+  #       "fizzy"
+  #     a: 11
+  #     b: 22
 
   test "test with anonymous proc with args":
     template bazzCall(blk: varargs[untyped]) =
@@ -460,12 +459,12 @@ suite "unpack args as lines":
     wasRun = true
     totalValue = 11 + 22
 
-  test "test with special case non-empty proc":
-    template bazzCall(blk: varargs[untyped]) =
-      unpackBlockArgs(bazz, blk)
-    bazzCall:
-      name do (i: int) -> string:
-        # echo "running func..."
-        "bazz" & $i
-      a: 11
-      b: 22
+  # test "test with special case non-empty proc":
+  #   template bazzCall(blk: varargs[untyped]) =
+  #     unpackBlockArgs(bazz, blk)
+  #   bazzCall:
+  #     name do (i: int) -> string:
+  #       # echo "running func..."
+  #       "bazz" & $i
+  #     a: 11
+  #     b: 22
