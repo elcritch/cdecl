@@ -95,6 +95,20 @@ macro bitfields*(name, def: untyped) =
     intTyp = name[^1]
     reclist = def
 
+  echo "BITFIELD:CHK: ", intTyp
+  if not (intTyp.strVal.startsWith("int") or
+          intTyp.strVal.startsWith("uint")):
+    error("must provide basic integer type", intTyp)
+  
+  let intBitIdxMax: int = -1 + (
+      if intTyp.strVal.endsWith("8"): 8
+      elif intTyp.strVal.endsWith("16"): 16
+      elif intTyp.strVal.endsWith("32"): 32
+      elif intTyp.strVal.endsWith("64"): 64
+      else: sizeof(int)*8
+  )
+
+
   var stmts = newStmtList()
   var fields = newSeq[NimNode]()
   for idx, identdef in reclist:
@@ -103,8 +117,14 @@ macro bitfields*(name, def: untyped) =
     else:
       identdef.expectKind nnkCall
 
-      let
+      var
+        fieldName: NimNode
+      if identdef[0].kind == nnkIdent:
         fieldName = identdef[0]
+      else:
+        fieldName = identdef[0][0]
+
+      let
         fieldNameEq = ident(fieldName.repr & "=")
         bexpr = identdef[1][0]
         fieldType = bexpr[0]
@@ -115,6 +135,10 @@ macro bitfields*(name, def: untyped) =
         rngA = min(fieldRngA, fieldRngB)
         rngB = max(fieldRngA, fieldRngB)
 
+      if rngB > intBitIdxMax:
+        error("range too large for integer type: " & $rngB & " larger than max bit index: " & $intBitIdxMax)
+
+      echo "BITFIELD:TPNAME: ", fieldName.treerepr
       fields.add fieldName
       stmts.add quote do:
         proc `fieldName`*(reg: `typeName`): `fieldType` =
