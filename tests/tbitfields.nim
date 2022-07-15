@@ -41,6 +41,16 @@ bitfields RegChannelChk(int32):
   largeunum {.check.}: uint8[6..16] # range are re-ordered using min/max
   largenum {.check.}: int8[5..0] # range are re-ordered using min/max
 
+when true:
+  bitfields RegChannelErr1(uint16): 
+    ## define RegConfig integer with accessors for `bitfields`
+    largeunum: uint8[6..16] # range are re-ordered using min/max
+    largenum: int8[5..0] # range are re-ordered using min/max
+
+  bitfields RegChannelErr2(uint32): 
+    ## define RegConfig integer with accessors for `bitfields`
+    largeunum: uint8[6..16] # range are re-ordered using min/max
+    largenum: int8[-1..0] # range are re-ordered using min/max
 
 suite "bit ops":
 
@@ -49,16 +59,6 @@ suite "bit ops":
     var regChannel {.used.}: RegChannel
     var regChannel2 {.used.}: RegChannel2
     var regChannelChk {.used.}: RegChannelChk
-
-  test "bitfields validate range size":
-    check false == compiles(block:
-      bitfields RegChannelErr(uint16): 
-        ## define RegConfig integer with accessors for `bitfields`
-        clockEnable: bool[7..7]
-        daisyIn: bool[6..6]
-        largeunum: uint8[6..16] # range are re-ordered using min/max
-        largenum: int8[5..0] # range are re-ordered using min/max
-    )
 
   test "get speed":
     check regConfig.speed == k1

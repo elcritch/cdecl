@@ -136,7 +136,12 @@ macro bitfields*(name, def: untyped) =
         rngB = max(fieldRngA, fieldRngB)
 
       if rngB > intBitIdxMax:
-        error("range too large for integer type: " & $rngB & " larger than max bit index: " & $intBitIdxMax)
+        error("range too large for integer type: " & $rngB &
+              " larger than max bit index: " & $intBitIdxMax,
+              bexpr[1][2])
+      if rngA < 0:
+        error("range too small for bitfield type: " & $rngA,
+              bexpr[1][1])
 
       echo "BITFIELD:TPNAME: ", fieldName.treerepr
       fields.add fieldName
