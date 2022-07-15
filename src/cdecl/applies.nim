@@ -150,7 +150,11 @@ proc processLabel(
     case format:
     of AssignsFmt:
       echo "ASSIGNS:LAMBDA: ", lstmt.treeRepr
-      pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
+      if lstmt.kind == nnkLambda:
+        echo "ASSIGNS:LAMBDA: ", "was lambda"
+        pstmt = lstmt
+      else:
+        pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
     of LabelFmt:
       pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
     varList[fparam.idx] = (fparam.name, pstmt)

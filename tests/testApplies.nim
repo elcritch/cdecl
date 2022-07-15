@@ -288,7 +288,7 @@ suite "unpack args as lines":
       wasRun = true
       totalValue = a + b
     
-    proc bazz(name: proc (i: int): string, a, b: int) =
+    proc bazz(name: proc(i: int): string, a, b: int) =
       echo name(a), ":", " a: ", $a, " b: ", $b
       check name(a) == "bazz" & $a
       wasRun = true
