@@ -361,15 +361,17 @@ suite "unpack args as lines":
     fooBar("buzz", b = 22):
       a = 11
     
-  # test "test with block label":
-  #   fooBar:
-  #     name = "buzz"
-  #     a =
-  #       block:
-  #         11
-  #     b =
-  #       echo "b arg"
-  #       22
+  test "test with block label":
+    fooBar:
+      name =
+        "buzz"
+      a =
+        block:
+          11
+      b =
+        block:
+          echo "b arg"
+          22
 
   test "test with anonymous proc":
     template Fizz(blk: varargs[untyped]) =
@@ -412,37 +414,37 @@ suite "unpack args as lines":
       a = 11
       b = 22
 
-  # test "test with special case named empty proc":
-  #   template fizzyCall(blk: varargs[untyped]) =
-  #     unpackBlockArgs(fizzy, blk)
-  #   fizzyCall:
-  #     id =
-  #       echo "running func..."
-  #       "fuzzy"
-  #     name =
-  #       echo "running func..."
-  #       "fizzy"
-  #     a = 11
-  #     b = 22
+  test "test with special case named empty proc":
+    template fizzyCall(blk: varargs[untyped]) =
+      unpackBlockArgs(fizzy, blk)
+    fizzyCall:
+      id = block:
+        echo "running func..."
+        "fuzzy"
+      name = block:
+        echo "running func..."
+        "fizzy"
+      a = 11
+      b = 22
 
-  # test "test with anonymous proc var":
-  #   template Fizz(blk: varargs[untyped]) =
-  #     unpackBlockArgs(fizz, blk)
-  #   let fn = proc (): string = "fizzy"
-  #   Fizz:
-  #     name: fn()
-  #     a: 11
-  #     b: 22
+  test "test with anonymous proc var":
+    template Fizz(blk: varargs[untyped]) =
+      unpackBlockArgs(fizz, blk)
+    let fn = proc (): string = "fizzy"
+    Fizz:
+      name = fn()
+      a = 11
+      b = 22
 
   # test "test with special case empty proc":
   #   template fizzCall(blk: varargs[untyped]) =
   #     unpackBlockArgs(fizz, blk)
   #   fizzCall:
-  #     name do () -> string:
+  #     name do () -> string =
   #       # echo "running func..."
   #       "fizzy"
-  #     a: 11
-  #     b: 22
+  #     a = 11
+  #     b = 22
 
   test "test with anonymous proc with args":
     template bazzCall(blk: varargs[untyped]) =
