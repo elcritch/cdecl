@@ -142,7 +142,7 @@ macro bitfields*(name, def: untyped) =
             let sz = $fieldBitSz
             let np = if fieldIsSigned: "i" else: "u"
             let nm = np & sz
-            let i = if fieldIsSigned: -127 else: 0
+            let i = if fieldIsSigned: -3 else: 0
             let j = 127
             var tmp = parseExpr &"range[{i}'{nm}..{j}'{nm}]"
             echo "TMP:fieldName.strVal: ", fieldName.strVal
