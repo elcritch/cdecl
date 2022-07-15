@@ -41,7 +41,7 @@ bitfields RegChannelChk(int32):
   largeunum {.check.}: uint8[6..16] # range are re-ordered using min/max
   largenum {.check.}: int8[5..0] # range are re-ordered using min/max
 
-when true:
+when false:
   bitfields RegChannelErr1(uint16): 
     ## define RegConfig integer with accessors for `bitfields`
     largeunum: uint8[6..16] # range are re-ordered using min/max

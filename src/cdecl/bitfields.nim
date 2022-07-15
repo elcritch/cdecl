@@ -100,13 +100,14 @@ macro bitfields*(name, def: untyped) =
           intTyp.strVal.startsWith("uint")):
     error("must provide basic integer type", intTyp)
   
-  let intBitIdxMax: int = -1 + (
-      if intTyp.strVal.endsWith("8"): 8
-      elif intTyp.strVal.endsWith("16"): 16
-      elif intTyp.strVal.endsWith("32"): 32
-      elif intTyp.strVal.endsWith("64"): 64
+  proc intBitSize(name: string ): int =
+      if name.endsWith("8"): 8
+      elif name.endsWith("16"): 16
+      elif name.endsWith("32"): 32
+      elif name.endsWith("64"): 64
       else: sizeof(int)*8
-  )
+
+  let intBitIdxMax: int = -1 + intBitSize(intTyp.strVal)
 
 
   var stmts = newStmtList()
@@ -119,15 +120,39 @@ macro bitfields*(name, def: untyped) =
 
       var
         fieldName: NimNode
+        fieldChecked: bool
+
       if identdef[0].kind == nnkIdent:
         fieldName = identdef[0]
       else:
         fieldName = identdef[0][0]
+        fieldChecked = true
 
       let
         fieldNameEq = ident(fieldName.repr & "=")
         bexpr = identdef[1][0]
-        fieldType = bexpr[0]
+
+        fieldTypeOrig = bexpr[0]
+        fieldIsSigned = fieldTypeOrig.strVal.startsWith("int")
+        fieldBitSz = intBitSize(fieldTypeOrig.strVal)
+      
+      let
+        fieldType =
+          if fieldChecked:
+            let sz = $fieldBitSz
+            let np = if fieldIsSigned: "i" else: "u"
+            let nm = np & sz
+            let i = if fieldIsSigned: -127 else: 0
+            let j = 127
+            var tmp = parseExpr &"range[{i}'{nm}..{j}'{nm}]"
+            echo "TMP:fieldName.strVal: ", fieldName.strVal
+            echo "TMP:sz: ", sz
+            echo "TMP:exp:", &"range[{i}'{nm}..{j}'{nm}]"
+            echo "TMP: ", tmp.repr
+            tmp
+          else:
+            bexpr[0]
+      
       bexpr.expectKind nnkBracketExpr
       let
         fieldRngA = bexpr[1][1].intVal
