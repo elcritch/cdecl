@@ -97,7 +97,10 @@ proc processLambda(
     fparam: Param,
     fparamTyp: NimNode,
 ): NimNode =
-  if lstmt.kind != nnkDo and fparamTyp[0].len() > 1:
+  var lstmt = lstmt
+  if lstmt.kind == nnkProcDef:
+    lstmt = lstmt.body
+  elif lstmt.kind != nnkDo and fparamTyp[0].len() > 1:
     ## print error in corner case of anonymous proc with args
     let fsyntax = fparamTyp[0].repr.replace("):",") ->")
     var msg = &"label `{lname}` is an anonymous proc that"
@@ -149,10 +152,11 @@ proc processLabel(
     var pstmt: NimNode
     case format:
     of AssignsFmt:
-      echo "ASSIGNS:LAMBDA: ", lstmt.treeRepr
       if lstmt.kind == nnkLambda:
-        echo "ASSIGNS:LAMBDA: ", "was lambda"
         pstmt = lstmt
+      elif lstmt.kind == nnkProcDef:
+        # pstmt = lstmt
+        pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
       else:
         pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
     of LabelFmt:
@@ -213,9 +217,6 @@ proc unpackLabelsImpl*(
   let fnParams = fnImpl[0].fnParamNames()
   let fnIdxParams = fnParams.pairs().toSeq()
 
-  if format == AssignsFmt:
-    echo "ARG:NAMES: ", fnParams.keys().toSeq().repr
-
   ## parse out params in various formats
   var varList: OrderedTable[int, (string, NimNode)]
   var idx = 0
@@ -223,19 +224,21 @@ proc unpackLabelsImpl*(
     if arg.kind == nnkStmtList:
       for labelArg in arg:
         # handle `label` args
-        case format:
-        of LabelFmt: labelArg.expectKind nnkCall
-        of AssignsFmt:
-          labelArg.expectKind nnkAsgn
-          echo "ARG: ", labelArg.treeRepr
-
         idx = -1
-        let
+        var rcode: (string, NimNode)
+
+        case format:
+        of LabelFmt:
+          labelArg.expectKind nnkCall
           rcode = (labelArg[0].strVal, labelArg[1])
-        if format == AssignsFmt:
-          echo "RCODE: ", rcode.repr
-        let
-          lcode = transformer(rcode)
+        of AssignsFmt:
+          if labelArg.kind == nnkProcDef:
+            rcode = (labelArg.name.strVal, labelArg)
+          else:
+            labelArg.expectKind nnkAsgn
+            rcode = (labelArg[0].strVal, labelArg[1])
+
+        let lcode = transformer(rcode)
         try:
           varList.processLabel(fnParams, lcode, format)
         except KeyError:

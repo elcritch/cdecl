@@ -289,14 +289,14 @@ suite "unpack args as lines":
       totalValue = a + b
     
     proc bazz(name: proc(i: int): string, a, b: int) =
-      echo name(a), ":", " a: ", $a, " b: ", $b
+      # echo name(a), ":", " a: ", $a, " b: ", $b
       check name(a) == "bazz" & $a
       wasRun = true
       totalValue = a + b
     
     let defProc = proc (): string = "barrs"
     proc barrs(name = defProc, a = 11, b = 22) =
-      echo name(), ":", " a: ", $a, " b: ", $b
+      # echo name(), ":", " a: ", $a, " b: ", $b
       check name() == "barrs"
       wasRun = true
       totalValue = a + b
@@ -329,7 +329,6 @@ suite "unpack args as lines":
     ## 
     let removeWiths {.compileTime.} =
       proc (code: (string, NimNode)): (string, NimNode) = 
-        echo "removeWiths: ", code.repr
         if code[0].startsWith("with"):
           result = (code[0][4..^1].toLower(), code[1])
         else:
@@ -356,8 +355,6 @@ suite "unpack args as lines":
       b = 22
     
   test "test with named args unordered":
-    static:
-      echo "TEST"
     fooBar("buzz", b = 22):
       a = 11
     
@@ -366,8 +363,7 @@ suite "unpack args as lines":
       name =
         "buzz"
       a =
-        block:
-          11
+        11
       b =
         block:
           echo "b arg"
@@ -446,6 +442,16 @@ suite "unpack args as lines":
       a = 11
       b = 22
 
+  test "test with proc name alt form":
+    template fizzCall(blk: varargs[untyped]) =
+      unpackBlockArgs(fizz, blk)
+    fizzCall:
+      proc name(): string =
+        echo "running func..."
+        "fizzy"
+      a = 11
+      b = 22
+  
   test "test with anonymous proc with args":
     template bazzCall(blk: varargs[untyped]) =
       unpackBlockArgs(bazz, blk)
@@ -470,3 +476,14 @@ suite "unpack args as lines":
         "bazz" & $i
       a = 11
       b = 22
+
+  test "test with proc name alt non-empty proc":
+    template bazzCall(blk: varargs[untyped]) =
+      unpackBlockArgs(bazz, blk)
+    bazzCall:
+      proc name(i: int): string =
+        echo "running func..."
+        "bazz" & $i
+      a = 11
+      b = 22
+    
