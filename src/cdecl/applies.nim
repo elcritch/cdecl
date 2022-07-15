@@ -63,7 +63,7 @@ type
     name*: string
     typ*: NimNode
 
-type LabelFormat = enum AssignsFmt, LabelFmt
+type LabelFormat = enum AssignsFmt, LabelFmt, LabelStrictFmt
 
 proc getBaseType(fparam: Param): NimNode =
   result = fparam.typ.getTypeImpl()
@@ -159,7 +159,7 @@ proc processLabel(
         pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
       else:
         pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
-    of LabelFmt:
+    of LabelFmt, LabelStrictFmt:
       pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
     varList[fparam.idx] = (fparam.name, pstmt)
   else:
@@ -172,44 +172,12 @@ let noTransforms {.compileTime.} =
   proc (code: (string, NimNode)): (string, NimNode) = 
     result = code
 
-proc unpackLabelsImpl*(
+proc unpackLabelsImpl(
     transformer: LabelTransformer,
     format: LabelFormat,
     callee: NimNode,
     args: NimNode
 ): NimNode {.compileTime.} =
-  ## unpacks 'labels' as named arguments. Labels are 
-  ## created using the Nim `command`, `call`, `do`, and
-  ## `name parameter` syntaxes. 
-  ## 
-  ## This lets you write create templates that look
-  ## like YAML type code. 
-  ## 
-  runnableExamples:
-    proc foo(name: string = "buzz", a, b: int) =
-      echo name, ":", " a: ", $a, " b: ", $b
-    
-    template myFoo(blk: varargs[untyped]) =
-      unpackLabelsAsArgs(foo, blk)
-    
-    myFoo:
-      name: "buzz"
-      a: 11
-      b: 22
-  
-  runnableExamples:
-    proc fizz(name: proc (): string, a, b: int) =
-      echo name(), ":", " a: ", $a, " b: ", $b
-    
-    template Fizz(blk: varargs[untyped]) =
-      unpackLabelsAsArgs(fizz, blk)
-    
-    let fn = proc (): string = "fizzy"
-    Fizz:
-      name: fn() # due to typing limitations this will wrap `fn` in another closure 
-      a: 11
-      b: 22
-  
   args.expectKind nnkArgList
   let fnImpl = getTypeImpl(callee)
 
@@ -221,6 +189,7 @@ proc unpackLabelsImpl*(
   var varList: OrderedTable[int, (string, NimNode)]
   var idx = 0
   for arg in args:
+    # echo "LBL_ARGS:ARG: ", arg.treeRepr
     if arg.kind == nnkStmtList:
       for labelArg in arg:
         # handle `label` args
@@ -228,7 +197,7 @@ proc unpackLabelsImpl*(
         var rcode: (string, NimNode)
 
         case format:
-        of LabelFmt:
+        of LabelFmt, LabelStrictFmt:
           labelArg.expectKind nnkCall
           rcode = (labelArg[0].strVal, labelArg[1])
         of AssignsFmt:
@@ -243,7 +212,12 @@ proc unpackLabelsImpl*(
           varList.processLabel(fnParams, lcode, format)
         except KeyError:
           error(fmt"label argument `{lcode[0]}` not found in proc arguments list. Options are: {fnParams.keys().toSeq().repr}", labelArg[0])
-    elif arg.kind == nnkExprEqExpr:
+    elif arg.kind in [nnkExprEqExpr, nnkExprColonExpr]:
+      # echo "LBL_ARGS:ARG:EXPR: ", arg.treeRepr
+      case format:
+      of AssignsFmt: arg.expectKind(nnkExprEqExpr)
+      of LabelStrictFmt: arg.expectKind(nnkExprEqExpr)
+      of LabelFmt: discard
       # handle regular named parameters
       let lname = arg[0].strVal
       let fp = fnParams[lname]
@@ -287,6 +261,43 @@ macro unpackLabelsAsArgs*(
     callee: typed;
     args: varargs[untyped]
 ): untyped =
+  ## Unpacks 'labels' as named arguments. Labels are 
+  ## created using the Nim `command`, `call`, `do`, and
+  ## `name parameter` syntaxes. 
+  ## 
+  ## This lets you write DSL's taht look like YAML.
+  ## 
+  runnableExamples:
+    proc foo(name: string = "buzz", a, b: int) =
+      echo name, ":", " a: ", $a, " b: ", $b
+    
+    template MyFoo(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(foo, blk)
+    
+    MyFoo(name: "buzz"):
+      a: 11
+      b: 22
+  
+  runnableExamples:
+    proc fizz(name: proc (): string, a, b: int) =
+      echo name(), ":", " a: ", $a, " b: ", $b
+    
+    template Fizz(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(fizz, blk)
+    
+    let fn = proc (): string = "fizzy"
+    Fizz:
+      name: fn() # due to typing limitations this will wrap `fn` in another closure 
+      a: 11
+      b: 22
+  
+  result = unpackLabelsImpl(noTransforms, LabelStrictFmt, callee, args)
+
+macro unpackLabelsAsArgsNonStrict*(
+    callee: typed;
+    args: varargs[untyped]
+): untyped =
+  ## stricter format of 
   result = unpackLabelsImpl(noTransforms, LabelFmt, callee, args)
 
 macro unpackBlockArgsWithFn*(
@@ -300,5 +311,35 @@ macro unpackBlockArgs*(
     callee: typed;
     args: varargs[untyped]
 ): untyped =
+  ## Unpacks named arguments from a block to apply to 
+  ## a function.  
+  ## 
+  ## This lets you write create templates that look
+  ## like YAML type code. 
+  ## 
+  runnableExamples:
+    proc foo(name: string = "buzz", a, b: int) =
+      echo name, ":", " a: ", $a, " b: ", $b
+    
+    template MyFoo(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(foo, blk)
+    
+    MyFoo(name = "buzz"):
+      a = 11
+      b = 22
+  
+  runnableExamples:
+    proc fizz(name: proc (): string, a, b: int) =
+      echo name(), ":", " a: ", $a, " b: ", $b
+    
+    template Fizz(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(fizz, blk)
+    
+    let fn = proc (): string = "fizzy"
+    Fizz:
+      name: fn() # due to typing limitations this will wrap `fn` in another closure 
+      a: 11
+      b: 22
+  
   result = unpackLabelsImpl(noTransforms, AssignsFmt, callee, args)
 

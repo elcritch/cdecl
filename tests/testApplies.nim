@@ -144,8 +144,6 @@ suite "unpack labels":
       b: 22
     
   test "test with named args unordered":
-    static:
-      echo "TEST"
     fooBar("buzz", b = 22):
       a: 11
     
@@ -180,6 +178,28 @@ suite "unpack labels":
     
     Barrs(name = proc(): string = "barrs"):
       a: 11
+
+  test "test with strict":
+    template Barrs(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(barrs, blk)
+    
+    const works = 
+      compiles(block:
+        let nm = proc(): string = "barrs"
+        Barrs(name = nm, a: 11):
+          b: 22
+      )
+    check works == false
+    wasRun = true
+    totalValue = 11 + 22
+
+  test "test with non-strict":
+    template Barrs(blk: varargs[untyped]) =
+      unpackLabelsAsArgsNonStrict(barrs, blk)
+    
+    let nm = proc(): string = "barrs"
+    Barrs(name = nm, a: 11):
+      b: 22
 
   test "test with def arguments name ":
     template Barrs(blk: varargs[untyped]) =
@@ -259,7 +279,7 @@ suite "unpack labels":
       a: 11
       b: 22
 
-suite "unpack args as lines":
+suite "unpack block args":
   setup:
     var wasRun = false
     var totalValue = 0
@@ -413,12 +433,13 @@ suite "unpack args as lines":
   test "test with special case named empty proc":
     template fizzyCall(blk: varargs[untyped]) =
       unpackBlockArgs(fizzy, blk)
+    
     fizzyCall:
       id = block:
-        echo "running func..."
+        # echo "running func..."
         "fuzzy"
       name = block:
-        echo "running func..."
+        # echo "running func..."
         "fizzy"
       a = 11
       b = 22
@@ -447,7 +468,7 @@ suite "unpack args as lines":
       unpackBlockArgs(fizz, blk)
     fizzCall:
       proc name(): string =
-        echo "running func..."
+        # echo "running func..."
         "fizzy"
       a = 11
       b = 22
@@ -482,7 +503,7 @@ suite "unpack args as lines":
       unpackBlockArgs(bazz, blk)
     bazzCall:
       proc name(i: int): string =
-        echo "running func..."
+        # echo "running func..."
         "bazz" & $i
       a = 11
       b = 22
