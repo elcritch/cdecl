@@ -436,15 +436,15 @@ suite "unpack args as lines":
       a = 11
       b = 22
 
-  # test "test with special case empty proc":
-  #   template fizzCall(blk: varargs[untyped]) =
-  #     unpackBlockArgs(fizz, blk)
-  #   fizzCall:
-  #     name do () -> string =
-  #       # echo "running func..."
-  #       "fizzy"
-  #     a = 11
-  #     b = 22
+  test "test with special case empty proc":
+    template fizzCall(blk: varargs[untyped]) =
+      unpackBlockArgs(fizz, blk)
+    fizzCall:
+      name = proc(): string =
+        # echo "running func..."
+        "fizzy"
+      a = 11
+      b = 22
 
   test "test with anonymous proc with args":
     template bazzCall(blk: varargs[untyped]) =
