@@ -461,12 +461,12 @@ suite "unpack args as lines":
     wasRun = true
     totalValue = 11 + 22
 
-  # test "test with special case non-empty proc":
-  #   template bazzCall(blk: varargs[untyped]) =
-  #     unpackBlockArgs(bazz, blk)
-  #   bazzCall:
-  #     name do (i: int) -> string:
-  #       # echo "running func..."
-  #       "bazz" & $i
-  #     a: 11
-  #     b: 22
+  test "test with special case non-empty proc":
+    template bazzCall(blk: varargs[untyped]) =
+      unpackBlockArgs(bazz, blk)
+    bazzCall:
+      name = proc(i: int): string =
+        # echo "running func..."
+        "bazz" & $i
+      a = 11
+      b = 22

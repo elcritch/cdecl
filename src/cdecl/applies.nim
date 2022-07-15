@@ -63,6 +63,8 @@ type
     name*: string
     typ*: NimNode
 
+type LabelFormat = enum AssignsFmt, LabelFmt
+
 proc getBaseType(fparam: Param): NimNode =
   result = fparam.typ.getTypeImpl()
 
@@ -130,8 +132,6 @@ proc processLambda(
   
   result = pstmt
 
-type LabelFormat = enum AssignsFmt, LabelFmt
-
 proc processLabel(
     varList: var OrderedTable[int, (string, NimNode)],
     fnParams: OrderedTable[string, Param],
@@ -146,7 +146,13 @@ proc processLabel(
   
   # lambda's require specialized handling to work reliably
   if fparamTyp.kind == nnkProcTy:
-    let pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
+    var pstmt: NimNode
+    case format:
+    of AssignsFmt:
+      echo "ASSIGNS:LAMBDA: ", lstmt.treeRepr
+      pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
+    of LabelFmt:
+      pstmt = processLambda(lname, lstmt, fparam, fparamTyp)
     varList[fparam.idx] = (fparam.name, pstmt)
   else:
     varList[fparam.idx] = (fparam.name, lstmt)
