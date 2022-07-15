@@ -1,10 +1,16 @@
 import macros, typetraits, tables, strformat, strutils, sequtils
 
-macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
-  ## Calls `callee` with fields form object `args` unpacked as individual arguments.
+macro unpackObjectArgs*(
+    callee: untyped;
+    arg: typed,
+    extras: varargs[untyped]
+): untyped =
+  ## Calls `callee` with fields form object `args` unpacked
+  ## as individual arguments.
   ## 
-  ## This is similar to `unpackVarargs` in `std/macros` but for call a function
-  ## using the values from an object
+  ## This is similar to `unpackVarargs` in `std/macros` but
+  ## for call a function using the values from an object.
+  ## 
   
   runnableExamples:
     type AddObj = object
@@ -24,7 +30,11 @@ macro unpackObjectArgs*(callee: untyped; arg: typed, extras: varargs[untyped]): 
   for extra in extras:
     result.add extra
 
-macro unpackObjectArgFields*(callee: untyped; arg: typed, extras: varargs[untyped]): untyped =
+macro unpackObjectArgFields*(
+    callee: untyped;
+    arg: typed,
+    extras: varargs[untyped]
+): untyped =
   ## Similar to `unpackObjectArgs` but with named parameters based on field names.
   ## 
   
@@ -120,10 +130,13 @@ proc processLambda(
   
   result = pstmt
 
+type LabelFormat = enum AssignsFmt, LabelFmt
+
 proc processLabel(
     varList: var OrderedTable[int, (string, NimNode)],
     fnParams: OrderedTable[string, Param],
     lcode: (string, NimNode),
+    format: LabelFormat,
 ) =
   let
     lname = lcode[0]
@@ -147,6 +160,7 @@ let noTransforms {.compileTime.} =
 
 proc unpackLabelsImpl*(
     transformer: LabelTransformer,
+    format: LabelFormat,
     callee: NimNode,
     args: NimNode
 ): NimNode {.compileTime.} =
@@ -196,13 +210,17 @@ proc unpackLabelsImpl*(
     if arg.kind == nnkStmtList:
       for labelArg in arg:
         # handle `label` args
-        labelArg.expectKind nnkCall
+        echo "ARG: ", labelArg.treeRepr
+        case format:
+        of LabelFmt: labelArg.expectKind nnkCall
+        of AssignsFmt: labelArg.expectKind nnkAsgn
+
         idx = -1
         let
           rcode = (labelArg[0].strVal, labelArg[1])
           lcode = transformer(rcode)
         try:
-          varList.processLabel(fnParams, lcode)
+          varList.processLabel(fnParams, lcode, format)
         except KeyError:
           error(fmt"label argument `{lcode[0]}` not found in proc arguments list. Options are: {fnParams.keys().toSeq().repr}", labelArg[0])
     elif arg.kind == nnkExprEqExpr:
@@ -243,11 +261,24 @@ macro unpackLabelsAsArgsWithFn*(
     callee: typed,
     args: varargs[untyped]
 ): untyped =
-  result = unpackLabelsImpl(transforms, callee, args)
+  result = unpackLabelsImpl(transforms, LabelFmt, callee, args)
 
 macro unpackLabelsAsArgs*(
     callee: typed;
     args: varargs[untyped]
 ): untyped =
-  result = unpackLabelsImpl(noTransforms, callee, args)
+  result = unpackLabelsImpl(noTransforms, LabelFmt, callee, args)
+
+macro unpackBlockArgsWithFn*(
+    transforms: static[LabelTransformer];
+    callee: typed,
+    args: varargs[untyped]
+): untyped =
+  result = unpackLabelsImpl(transforms, AssignsFmt, callee, args)
+
+macro unpackBlockArgs*(
+    callee: typed;
+    args: varargs[untyped]
+): untyped =
+  result = unpackLabelsImpl(noTransforms, AssignsFmt, callee, args)
 
