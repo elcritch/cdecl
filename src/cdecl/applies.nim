@@ -206,10 +206,13 @@ proc unpackLabelsImpl(
             copyLineInfo(id, labelArg[0])
             var larg = nnkCall.newTree(id, labelArg[2])
             labelArg = larg
-          
           labelArg.expectKind nnkCall
           rcode = (labelArg[0].strVal, labelArg[1])
         of AssignsFmt:
+          if labelArg[0].kind == nnkPrefix:
+            let id = ident(labelArg[0].repr & labelArg[1].repr)
+            copyLineInfo(id, labelArg[0])
+            labelArg[0] = id
           if labelArg.kind == nnkProcDef:
             rcode = (labelArg.name.strVal, labelArg)
           else:

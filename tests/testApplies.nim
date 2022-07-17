@@ -382,6 +382,25 @@ suite "unpack block args":
       withA = 11
       withB = 22
     
+  test "test transform basic":
+    ## basic fooBar call
+    ## 
+    let removeWiths {.compileTime.} =
+      proc (code: (string, NimNode)): Option[(string, NimNode)] =
+        if code[0].startsWith("with"):
+          result = some (code[0][4..^1].toLower(), code[1])
+        elif code[0].startsWith("@"):
+          echo "found magic"
+        else:
+          result = some code
+    template FooBar(blk: varargs[untyped]) =
+      removeWiths.unpackBlockArgsWithFn(foo, blk)
+    
+    FooBar:
+      @opt = true
+      withA = 11
+      withB = 22
+  
   test "test with pos arg":
     fooBar("buzz"):
       a = 11
