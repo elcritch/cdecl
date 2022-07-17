@@ -1,6 +1,7 @@
 import unittest
 import strutils
 import cdecl/applies
+import options
 
 {.push hint[XDeclaredButNotUsed](off).}
 
@@ -60,6 +61,14 @@ suite "unpack labels":
     template fooBar(blk: varargs[untyped]) =
       unpackLabelsAsArgs(foo, blk)
 
+    proc fooPrefix(`@name`: string = "buzz", a, b: int) =
+      # echo name, ":", " a: ", $a, " b: ", $b
+      wasRun = true
+      totalValue = a + b
+    
+    template FooBarPrefix(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(fooPrefix, blk)
+
     proc fizz(name: proc (): string, a, b: int) =
       # echo name(), ":", " a: ", $a, " b: ", $b
       check name() == "fizzy"
@@ -113,19 +122,54 @@ suite "unpack labels":
       a: 11
       b: 22
     
+  test "test basic capitalized":
+    ## basic fooBar call
+    ## 
+    FooBarPrefix:
+      @name: "buzz"
+      a: 11
+      b: 22
+    
+  test "test basic capitalized":
+    ## basic fooBar call
+    ## 
+    FooBarPrefix(@name = "buzz"):
+      a: 11
+      b: 22
+    
   test "test transform basic":
     ## basic fooBar call
     ## 
     let removeWiths {.compileTime.} =
-      proc (code: (string, NimNode)): (string, NimNode) = 
+      proc (code: (string, NimNode)): Option[(string, NimNode)] = 
         if code[0].startsWith("with"):
-          result = (code[0][4..^1].toLower(), code[1])
+          result = some (code[0][4..^1].toLower(), code[1])
         else:
-          result = code
+          result = some code
     template Foo(blk: varargs[untyped]) =
       removeWiths.unpackLabelsAsArgsWithFn(foo, blk)
     
     Foo:
+      name: "buzz"
+      withA: 11
+      withB: 22
+    
+  test "test transform basic":
+    ## basic fooBar call
+    ## 
+    let removeWiths {.compileTime.} =
+      proc (code: (string, NimNode)): Option[(string, NimNode)] = 
+        if code[0].startsWith("with"):
+          result = some (code[0][4..^1].toLower(), code[1])
+        elif code[0].startsWith("@"):
+          echo "option found"
+        else:
+          result = some code
+    template Foo(blk: varargs[untyped]) =
+      removeWiths.unpackLabelsAsArgsWithFn(foo, blk)
+    
+    Foo:
+      @opt: "test"
       name: "buzz"
       withA: 11
       withB: 22
@@ -291,6 +335,14 @@ suite "unpack block args":
     template fooBar(blk: varargs[untyped]) =
       unpackBlockArgs(foo, blk)
 
+    proc fooPrefix(`@name`: string = "buzz", a, b: int) =
+      # echo name, ":", " a: ", $a, " b: ", $b
+      wasRun = true
+      totalValue = a + b
+    
+    template FooBarPrefix(blk: varargs[untyped]) =
+      unpackBlockArgs(fooPrefix, blk)
+
     proc fizz(name: proc (): string, a, b: int) =
       # echo name(), ":", " a: ", $a, " b: ", $b
       check name() == "fizzy"
@@ -344,15 +396,30 @@ suite "unpack block args":
       a = 11
       b = 22
     
+  test "test basic capitalized":
+    ## basic fooBar call
+    ## 
+    FooBarPrefix:
+      @name = "buzz"
+      a = 11
+      b = 22
+  
+  test "test basic capitalized":
+    ## basic fooBar call
+    ## 
+    FooBarPrefix(@name = "buzz"):
+      a = 11
+      b = 22
+    
   test "test transform basic":
     ## basic fooBar call
     ## 
     let removeWiths {.compileTime.} =
-      proc (code: (string, NimNode)): (string, NimNode) = 
+      proc (code: (string, NimNode)): Option[(string, NimNode)] = 
         if code[0].startsWith("with"):
-          result = (code[0][4..^1].toLower(), code[1])
+          result = some (code[0][4..^1].toLower(), code[1])
         else:
-          result = code
+          result = some code
     template Foo(blk: varargs[untyped]) =
       removeWiths.unpackBlockArgsWithFn(foo, blk)
     
@@ -361,6 +428,25 @@ suite "unpack block args":
       withA = 11
       withB = 22
     
+  test "test transform basic":
+    ## basic fooBar call
+    ## 
+    let removeWiths {.compileTime.} =
+      proc (code: (string, NimNode)): Option[(string, NimNode)] =
+        if code[0].startsWith("with"):
+          result = some (code[0][4..^1].toLower(), code[1])
+        elif code[0].startsWith("@"):
+          echo "found magic"
+        else:
+          result = some code
+    template FooBar(blk: varargs[untyped]) =
+      removeWiths.unpackBlockArgsWithFn(foo, blk)
+    
+    FooBar:
+      @opt = true
+      withA = 11
+      withB = 22
+
   test "test with pos arg":
     fooBar("buzz"):
       a = 11

@@ -1,3 +1,4 @@
+import options
 import macros, typetraits, tables, strformat, strutils, sequtils
 
 macro unpackObjectArgs*(
@@ -166,11 +167,12 @@ proc processLabel(
     varList[fparam.idx] = (fparam.name, lstmt)
 
 type
-  LabelTransformer* = proc (code: (string, NimNode)): (string, NimNode)
+  LabelTransformer* =
+    proc (code: (string, NimNode)): Option[(string, NimNode)]
 
 let noTransforms {.compileTime.} =
-  proc (code: (string, NimNode)): (string, NimNode) = 
-    result = code
+  proc (code: (string, NimNode)): Option[(string, NimNode)] = 
+    result = some(code)
 
 proc unpackLabelsImpl(
     transformer: LabelTransformer,
@@ -189,40 +191,68 @@ proc unpackLabelsImpl(
   var varList: OrderedTable[int, (string, NimNode)]
   var idx = 0
   for arg in args:
-    # echo "LBL_ARGS:ARG: ", arg.treeRepr
+    # echo "ARG: ", arg.treeRepr
     if arg.kind == nnkStmtList:
-      for labelArg in arg:
+      for larg in arg:
+        var labelArg = larg
         # handle `label` args
         idx = -1
         var rcode: (string, NimNode)
 
         case format:
         of LabelFmt, LabelStrictFmt:
+          ## handle prefixes
+          if labelArg.kind == nnkPrefix:
+            let id = ident(labelArg[0].repr & labelArg[1].repr)
+            copyLineInfo(id, labelArg[0])
+            var larg = nnkCall.newTree(id, labelArg[2])
+            labelArg = larg
+
+          # handle argument
           labelArg.expectKind nnkCall
           rcode = (labelArg[0].strVal, labelArg[1])
         of AssignsFmt:
+          ## handle prefixes
+          if labelArg[0].kind == nnkPrefix:
+            let id = ident(labelArg[0][0].strVal & labelArg[0][1].strVal)
+            copyLineInfo(id, labelArg[0])
+            labelArg[0] = id
+
+          # handle argument
           if labelArg.kind == nnkProcDef:
             rcode = (labelArg.name.strVal, labelArg)
           else:
             labelArg.expectKind nnkAsgn
             rcode = (labelArg[0].strVal, labelArg[1])
 
-        let lcode = transformer(rcode)
-        try:
-          varList.processLabel(fnParams, lcode, format)
-        except KeyError:
-          error(fmt"label argument `{lcode[0]}` not found in proc arguments list. Options are: {fnParams.keys().toSeq().repr}", labelArg[0])
+        let tres = transformer(rcode)
+        if tres.isSome():
+          let lcode = tres.get()
+          try:
+            varList.processLabel(fnParams, lcode, format)
+          except KeyError:
+            error(fmt"label argument `{lcode[0]}` not found in proc arguments list. Options are: {fnParams.keys().toSeq().repr}", labelArg[0])
+    
     elif arg.kind in [nnkExprEqExpr, nnkExprColonExpr]:
-      # echo "LBL_ARGS:ARG:EXPR: ", arg.treeRepr
+      var arg = arg
+      ## handle prefixes
+      # echo "LBL: ", arg.treeRepr
+      if arg[0].kind == nnkPrefix:
+        let id = ident(arg[0][0].strVal & arg[0][1].strVal)
+        copyLineInfo(id, arg[0])
+        arg[0] = id
+      
       case format:
       of AssignsFmt: arg.expectKind(nnkExprEqExpr)
       of LabelStrictFmt: arg.expectKind(nnkExprEqExpr)
       of LabelFmt: discard
+
       # handle regular named parameters
       let lname = arg[0].strVal
       let fp = fnParams[lname]
       varList[fp.idx] = (fp.name, arg[1])
       idx.inc
+
     else:
       # handle basic types like strlit or intlit
       varList[idx] = ("", arg)
