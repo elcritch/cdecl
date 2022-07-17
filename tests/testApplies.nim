@@ -328,6 +328,14 @@ suite "unpack block args":
     template fooBar(blk: varargs[untyped]) =
       unpackBlockArgs(foo, blk)
 
+    proc fooPrefix(`@name`: string = "buzz", a, b: int) =
+      # echo name, ":", " a: ", $a, " b: ", $b
+      wasRun = true
+      totalValue = a + b
+    
+    template FooBarPrefix(blk: varargs[untyped]) =
+      unpackBlockArgs(fooPrefix, blk)
+
     proc fizz(name: proc (): string, a, b: int) =
       # echo name(), ":", " a: ", $a, " b: ", $b
       check name() == "fizzy"
@@ -381,6 +389,14 @@ suite "unpack block args":
       a = 11
       b = 22
     
+  test "test basic capitalized":
+    ## basic fooBar call
+    ## 
+    FooBarPrefix:
+      @name = "buzz"
+      a = 11
+      b = 22
+    
   test "test transform basic":
     ## basic fooBar call
     ## 
@@ -416,7 +432,7 @@ suite "unpack block args":
       @opt = true
       withA = 11
       withB = 22
-  
+
   test "test with pos arg":
     fooBar("buzz"):
       a = 11
