@@ -238,7 +238,7 @@ proc unpackLabelsImpl(
       ## handle prefixes
       # echo "LBL: ", arg.treeRepr
       if arg[0].kind == nnkPrefix:
-        let id = ident(arg[0].repr & arg[1].repr)
+        let id = ident(arg[0][0].strVal & arg[0][1].strVal)
         copyLineInfo(id, arg[0])
         arg[0] = id
       

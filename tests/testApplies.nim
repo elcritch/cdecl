@@ -130,6 +130,13 @@ suite "unpack labels":
       a: 11
       b: 22
     
+  test "test basic capitalized":
+    ## basic fooBar call
+    ## 
+    FooBarPrefix(@name = "buzz"):
+      a: 11
+      b: 22
+    
   test "test transform basic":
     ## basic fooBar call
     ## 
@@ -394,6 +401,13 @@ suite "unpack block args":
     ## 
     FooBarPrefix:
       @name = "buzz"
+      a = 11
+      b = 22
+  
+  test "test basic capitalized":
+    ## basic fooBar call
+    ## 
+    FooBarPrefix(@name = "buzz"):
       a = 11
       b = 22
     
