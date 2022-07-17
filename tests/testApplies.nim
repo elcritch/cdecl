@@ -61,6 +61,14 @@ suite "unpack labels":
     template fooBar(blk: varargs[untyped]) =
       unpackLabelsAsArgs(foo, blk)
 
+    proc fooPrefix(`@name`: string = "buzz", a, b: int) =
+      # echo name, ":", " a: ", $a, " b: ", $b
+      wasRun = true
+      totalValue = a + b
+    
+    template FooBarPrefix(blk: varargs[untyped]) =
+      unpackLabelsAsArgs(fooPrefix, blk)
+
     proc fizz(name: proc (): string, a, b: int) =
       # echo name(), ":", " a: ", $a, " b: ", $b
       check name() == "fizzy"
@@ -111,6 +119,14 @@ suite "unpack labels":
     
     Foo:
       name: "buzz"
+      a: 11
+      b: 22
+    
+  test "test basic capitalized":
+    ## basic fooBar call
+    ## 
+    FooBarPrefix:
+      @name: "buzz"
       a: 11
       b: 22
     
