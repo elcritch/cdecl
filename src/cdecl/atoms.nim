@@ -77,7 +77,7 @@ proc declAtom*(nm: string, checkDeclared=false): NimNode =
     result = quote do:
       Atom(`id`)
 
-var atomNone = Atom.new(0, "none")
+var atomNone {.used.} = Atom.new(0, "none")
 
 proc empty*(a: typedesc[Atom]): Atom =
   result = Atom(0)
