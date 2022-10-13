@@ -1,4 +1,6 @@
 cache*
 tests/t*
 !tests/t*.nim
+src/*
+!src/*.nim
 bin/

@@ -33,6 +33,14 @@ proc crc32*(val: string): Crc32 =
     updateCrc32(res, ch)
   result = Crc32(not res)
 
+proc crc32*(val: uint): Crc32 =
+  ## compute the crc32 for a string
+  var res = uint32.high
+  for i in 0..3:
+    let ch = cast[char](val shr (8*i))
+    updateCrc32(res, ch)
+  result = Crc32(not res)
+
 proc crc32*(vals: varargs[string]): Crc32 =
   ## compute the crc32 for multiple strings
   ## works as if the strings were one long string

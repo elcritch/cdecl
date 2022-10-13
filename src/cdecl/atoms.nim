@@ -44,9 +44,14 @@ proc `$`*(a: Atom): string =
 proc `repr`*(a: Atom): string =
   "@:" & "" & $a.int & "\"" & atomNames[a] & "\""
 
+proc genCrc32(name: string): Crc32 =
+  result = crc32(name.nimIdentNormalize())
+  while result.int == 0:
+    result = crc32(result.uint32)
+
 proc new*(a: typedesc[Atom], name: string): Atom =
   ## initialize a new atom at runtime from the given string
-  result = Atom(crc32(name.nimIdentNormalize()))
+  result = Atom(genCrc32(name))
   atomNames[result] = name
 
 proc new*(a: typedesc[Atom], raw: int, desc = ""): Atom =
@@ -61,7 +66,7 @@ proc declAtom*(nm: string, checkDeclared=false): NimNode =
   ## helper for macros to declare new atoms
   let idVar = genSym(nskVar, "atomVar")
   let idStr = newStrLitNode(nm)
-  let id = crc32(nm.nimIdentNormalize())
+  let id = Atom(genCrc32(nm))
   if nm notin atomCache:
     result = quote do:
       block:
