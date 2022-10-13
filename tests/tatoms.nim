@@ -34,4 +34,6 @@ suite "tests":
     let notCompiles = compiles:
       let y: Atom = @@"undefined"
     check notCompiles == false
+  
+  test "atom empty tests":
     check Atom(0) == Atom.empty()
