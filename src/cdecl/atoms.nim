@@ -79,7 +79,7 @@ proc declAtom*(nm: string, checkDeclared=false): NimNode =
 
 var atomNone = Atom.new(0, "none")
 
-proc none*(a: typedesc[Atom]): Atom =
+proc empty*(a: typedesc[Atom]): Atom =
   result = Atom(0)
 
 macro atom*(name: typed): Atom =
