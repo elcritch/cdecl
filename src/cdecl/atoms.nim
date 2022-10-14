@@ -100,3 +100,6 @@ macro `@@`*(name: untyped): Atom =
     error("not declared: " & name.repr, name)
   result = declAtom(name.strVal)
 
+proc `!&`*(a, b: Atom): Atom =
+  ## hash two atom's together. note this doesn't update the description
+  result = Atom(a.Crc32 !& b.Crc32)
