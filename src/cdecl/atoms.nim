@@ -40,9 +40,16 @@ proc `==`*(a, b: Atom): bool {.borrow.}
 proc hash*(a: Atom): Hash = a.Hash
 
 proc `$`*(a: Atom): string =
-  "@:\"" & atomNames[a] & "\""
+  if a in atomNames:
+    "@:\"" & atomNames[a] & "\""
+  else:
+    "@:\"\""
+
 proc `repr`*(a: Atom): string =
-  "@:" & "" & $a.int & "\"" & atomNames[a] & "\""
+  if a in atomNames:
+    "@:" & "" & $a.int & "\"" & atomNames[a] & "\""
+  else:
+    "@:" & $a.uint32 & ":\"\""
 
 proc genCrc32(name: string): Crc32 =
   result = crc32(name.nimIdentNormalize())
