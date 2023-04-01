@@ -35,16 +35,26 @@ expandMacros:
         echo "init"
 
 type
+  `StdMsgsOther`* = object
+
   `StdMsgs.Bool`* = object
     data*: bool
+  
+  `module[StdMsgs]` = concept s
+    s is typedesc[StdMsgs]
+  `module[StdMsgs.Bool]` = concept s
+    s is typedesc[`StdMsgs.Bool`]
 
 proc init*(): `StdMsgs.Bool` =
   echo "init"
 
-template Bool*[T: StdMsgs](typ: typedesc[T]): typedesc =
+template Bool*(typ: `module[StdMsgs]`): typedesc[`StdMsgs.Bool`] =
   `StdMsgs.Bool`
 
-proc init*[T: `StdMsgs.Bool`](typ: typedesc[T]): `StdMsgs.Bool` =
+proc test*(a: `module[StdMsgs.Bool]`, b: int) =
+  echo "testing..", a + b
+
+proc init*(typ: `module[StdMsgs.Bool]`): `StdMsgs.Bool` =
   echo "init"
 
 import unittest
@@ -52,6 +62,9 @@ import unittest
 suite "faux module":
 
   test "init":
-    let msg: StdMsgs.Bool = StdMsgs.Bool.init()
+    var msg: StdMsgs.Bool
+    # var msg2: StdMsgsOther.Bool
+    # msg = StdMsgs.Bool.init()
     echo "msg: ", msg
+    # test(StdMsgs.Bool, 1)
 
