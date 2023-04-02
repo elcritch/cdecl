@@ -39,17 +39,18 @@ type
 
   `StdMsgs.Bool`* = object
     data*: bool
+  `StdMsgs.Bools`* = object
+    data*: bool
 
-proc init*(): `StdMsgs.Bool` =
-  echo "init"
-
-template Bool*[T: StdMsgs](typ: typedesc[T]): typedesc[`StdMsgs.Bool`] =
+template Bool*(typ: typedesc[StdMsgs]): typedesc[`StdMsgs.Bool`] =
   `StdMsgs.Bool`
+template Bools*(typ: typedesc[StdMsgs]): typedesc[`StdMsgs.Bools`] =
+  `StdMsgs.Bools`
 
 proc test*(a: StdMsgs.Bool, b: int) =
   echo "testing: ", a.data, " b: ", b
 
-proc init*[T: StdMsgs.Bool](_: typedesc[T]): `StdMsgs.Bool` =
+proc init*(typ: typedesc[StdMsgs.Bool]): `StdMsgs.Bool` =
   echo "init"
   result.data = true
 
@@ -58,6 +59,7 @@ import unittest
 suite "faux module":
 
   test "init":
+
     var msg: StdMsgs.Bool
     # var msg2: StdMsgsOther.Bool
     msg = StdMsgs.Bool.init()
