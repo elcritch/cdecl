@@ -14,48 +14,51 @@ import std/genasts
 type
   FauxModule* = object
 
-macro module*(name, blk: untyped) =
-  echo "name: ", name
-  result = genAst(Mod=ident(name.strVal)):
-    type
-      Mod* = distinct FauxModule
+# macro module*(name, blk: untyped) =
+#   echo "name: ", name
+#   result = genAst(Mod=ident(name.strVal)):
+#     type
+#       Mod* = distinct FauxModule
   
-  echo "result:"
-  echo result.treeRepr
+#   echo "result:"
+#   echo result.treeRepr
+#   result = newEmptyNode()
 
-expandMacros:
-  module StdMsgs:
+# expandMacros:
+#   module StdMsgs:
 
-    module Bool:
-      type
-        Bool* = object
-          data*: bool
+#     module Bool:
+#       type
+#         Bool* = object
+#           data*: bool
 
-      proc init*(): BoolMsg =
-        echo "init"
+#       proc init*(): BoolMsg =
+#         echo "init"
 
 type
+  `StdMsgs`* = object
   `StdMsgsOther`* = object
 
   `StdMsgs.Bool`* = object
     data*: bool
   
-  `module[StdMsgs]` = concept s
+  `fauxmod[StdMsgs]`* = concept s
     s is typedesc[StdMsgs]
-  `module[StdMsgs.Bool]` = concept s
+  `fauxmod[StdMsgs.Bool]`* = concept s
     s is typedesc[`StdMsgs.Bool`]
 
 proc init*(): `StdMsgs.Bool` =
   echo "init"
 
-template Bool*(typ: `module[StdMsgs]`): typedesc[`StdMsgs.Bool`] =
+template Bool*(typ: `fauxmod[StdMsgs]`): typedesc[`StdMsgs.Bool`] =
   `StdMsgs.Bool`
 
-proc test*(a: `module[StdMsgs.Bool]`, b: int) =
+proc test*[T: StdMsgs.Bool](a: typedesc[T], b: int) =
   echo "testing..", a + b
 
-proc init*(typ: `module[StdMsgs.Bool]`): `StdMsgs.Bool` =
+proc init*[T: `StdMsgs.Bool`](_: typedesc[T]): `StdMsgs.Bool` =
   echo "init"
+  result.data = true
 
 import unittest
 
@@ -64,7 +67,7 @@ suite "faux module":
   test "init":
     var msg: StdMsgs.Bool
     # var msg2: StdMsgsOther.Bool
-    # msg = StdMsgs.Bool.init()
+    msg = StdMsgs.Bool.init()
     echo "msg: ", msg
     # test(StdMsgs.Bool, 1)
 
