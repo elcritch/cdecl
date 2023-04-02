@@ -37,20 +37,20 @@ expandMacros:
 type
   `StdMsgsOther`* = object
 
-  `StdMsgs.Bool`* = object
+  StdMsgsBool* = object
     data*: bool
-  `StdMsgs.Bools`* = object
+  StdMsgsBools* = object
     data*: bool
 
-template Bool*(typ: typedesc[StdMsgs]): typedesc[`StdMsgs.Bool`] =
-  `StdMsgs.Bool`
-template Bools*(typ: typedesc[StdMsgs]): typedesc[`StdMsgs.Bools`] =
-  `StdMsgs.Bools`
+template Bool*(typ: typedesc[StdMsgs]): typedesc[StdMsgsBool] =
+  StdMsgsBool
+template Bools*(typ: typedesc[StdMsgs]): typedesc[StdMsgsBools] =
+  StdMsgsBools
 
-proc test*(a: StdMsgs.Bool, b: int) =
+proc test*(a: StdMsgsBool, b: int) =
   echo "testing: ", a.data, " b: ", b
 
-proc init*(typ: typedesc[StdMsgs.Bool]): `StdMsgs.Bool` =
+proc init*(typ: typedesc[StdMsgs.Bool]): StdMsgs.Bool =
   echo "init"
   result.data = true
 
@@ -59,10 +59,9 @@ import unittest
 suite "faux module":
 
   test "init":
-
     var msg: StdMsgs.Bool
     # var msg2: StdMsgsOther.Bool
-    msg = StdMsgs.Bool.init()
+    msg = StdMsgsBool.init()
     echo "msg: ", msg
     test(msg, 1)
 
