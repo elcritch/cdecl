@@ -41,22 +41,17 @@ type
 
   `StdMsgs.Bool`* = object
     data*: bool
-  
-  `fauxmod[StdMsgs]`* = concept s
-    s is typedesc[StdMsgs]
-  `fauxmod[StdMsgs.Bool]`* = concept s
-    s is typedesc[`StdMsgs.Bool`]
 
 proc init*(): `StdMsgs.Bool` =
   echo "init"
 
-template Bool*(typ: `fauxmod[StdMsgs]`): typedesc[`StdMsgs.Bool`] =
+template Bool*[T: StdMsgs](typ: typedesc[T]): typedesc[`StdMsgs.Bool`] =
   `StdMsgs.Bool`
 
-proc test*[T: StdMsgs.Bool](a: typedesc[T], b: int) =
-  echo "testing..", a + b
+proc test*(a: StdMsgs.Bool, b: int) =
+  echo "testing: ", a.data, " b: ", b
 
-proc init*[T: `StdMsgs.Bool`](_: typedesc[T]): `StdMsgs.Bool` =
+proc init*[T: StdMsgs.Bool](_: typedesc[T]): `StdMsgs.Bool` =
   echo "init"
   result.data = true
 
@@ -69,5 +64,5 @@ suite "faux module":
     # var msg2: StdMsgsOther.Bool
     msg = StdMsgs.Bool.init()
     echo "msg: ", msg
-    # test(StdMsgs.Bool, 1)
+    test(msg, 1)
 
