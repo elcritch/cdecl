@@ -14,29 +14,27 @@ import std/genasts
 type
   FauxModule* = object
 
-# macro module*(name, blk: untyped) =
-#   echo "name: ", name
-#   result = genAst(Mod=ident(name.strVal)):
-#     type
-#       Mod* = distinct FauxModule
+macro module*(name, blk: untyped) =
+  echo "name: ", name
+  result = genAst(Mod=ident(name.strVal)):
+    type
+      Mod* = distinct FauxModule
   
-#   echo "result:"
-#   echo result.treeRepr
-#   result = newEmptyNode()
+  echo "result:"
+  echo result.treeRepr
 
-# expandMacros:
-#   module StdMsgs:
+expandMacros:
+  module StdMsgs:
 
-#     module Bool:
-#       type
-#         Bool* = object
-#           data*: bool
+    module Bool:
+      type
+        Bool* = object
+          data*: bool
 
-#       proc init*(): BoolMsg =
-#         echo "init"
+      proc init*(): BoolMsg =
+        echo "init"
 
 type
-  `StdMsgs`* = object
   `StdMsgsOther`* = object
 
   `StdMsgs.Bool`* = object
