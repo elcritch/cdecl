@@ -15,6 +15,7 @@ type
 
 {.emit: """/*TYPESECTION*/
 /* define example C Macro for testing */
+#include <stdio.h>
 #define C_DEFINE_VAR(NM, SZ) int32_t NM[SZ]
 #define C_DEFINE_VAR_DUO(NM, SZ, NM2) int32_t NM[SZ]
 #define C_DEFINE_VAR_ADDITION(NM, SZ, N2) \
